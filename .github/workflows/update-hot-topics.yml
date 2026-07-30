@@ -3,6 +3,12 @@ name: 部署考公工作台
 on:
   push:
     branches: [main]
+    paths:
+      - '考公工作台.html'
+      - 'index.html'
+      - 'hot_topics.js'
+      - 'hot_topics.json'
+      - '.github/workflows/**'
   workflow_dispatch:
 
 permissions:
