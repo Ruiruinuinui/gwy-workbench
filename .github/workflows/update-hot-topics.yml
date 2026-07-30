@@ -8,6 +8,8 @@ on:
       - 'index.html'
       - 'hot_topics.js'
       - 'hot_topics.json'
+      - 'manifest.json'
+      - 'icon.svg'
       - '.github/workflows/**'
   workflow_dispatch:
 
