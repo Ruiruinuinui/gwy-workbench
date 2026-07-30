@@ -12,7 +12,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>考公工作台 · 小布伴学 v3.1</title>
+<title>考公工作台 · 小布伴学 v3.2</title>
 <script src="hot_topics.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -513,12 +513,12 @@ function renderWeeklyReview(){
   var allMods=MODULES.filter(function(m){return m.id!=='teaching'||state.teachingActive;});
   var weekData=[];
   var weekTotal=0;
-  weekDays.forEach(function(d){
+  weekDays.forEach(function(d,idx){
     var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     var dayMs=0;
     var dayMods={};
     (state.todos[k]||[]).forEach(function(td){ var ms=taskMs(td); dayMs+=ms; if(td.moduleId){ dayMods[td.moduleId]=(dayMods[td.moduleId]||0)+ms; } });
-    weekData.push({date:k,label:dayLabel(6-((6-i))),ms:dayMs,mods:dayMods});
+    weekData.push({date:k,label:dayLabel(6-idx),ms:dayMs,mods:dayMods});
     weekTotal+=dayMs;
   });
 
