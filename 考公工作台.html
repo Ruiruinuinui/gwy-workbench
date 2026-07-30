@@ -1150,10 +1150,22 @@ function cloudPull(){
     var remoteData=JSON.parse(file.content);
     var remoteTime=new Date(d.updated_at).getTime();
     var localTime=getLastModified();
-    // 取时间戳最新的
-    if(remoteTime<=localTime){
+    // 检测：远端数据为空或极旧 → 可能是不同步的 Gist，触发重新搜索
+    var hasRemoteData=remoteData.todos&&Object.keys(remoteData.todos).length>0;
+    var hasLocalData=state.todos&&Object.keys(state.todos).length>0;
+    if(!hasRemoteData && hasLocalData){
+      // 远端无数据但本地有 → 把本地数据推上去
       SYNC_STATE.status='ok'; SYNC_STATE.msg='\u5DF2\u662F\u6700\u65B0'; saveSyncState(); updateSyncUI();
-      // 如果本地更新则推送
+      cloudPush(true);
+      return true;
+    }
+    if(!hasRemoteData && !hasLocalData){
+      SYNC_STATE.status='ok'; SYNC_STATE.msg='\u5DF2\u662F\u6700\u65B0'; saveSyncState(); updateSyncUI();
+      return true;
+    }
+    // 对比时间戳，取较新的
+    if(remoteTime<=localTime && hasLocalData){
+      SYNC_STATE.status='ok'; SYNC_STATE.msg='\u5DF2\u662F\u6700\u65B0'; saveSyncState(); updateSyncUI();
       if(localTime>remoteTime) cloudPush(true);
       return true;
     }
