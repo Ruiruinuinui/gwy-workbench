@@ -947,6 +947,14 @@ function init(){ loadState(); state.activeTimer=null; if(timerInterval){clearInt
   } else {
     startSyncPoll();
   }
+  // 检测 PWA 新设备：无数据 + 无同步 → 引导用户设置云同步恢复数据
+  var hasLocalData=state.todos&&Object.keys(state.todos).length>0;
+  var hasReviewData=state.review&&Object.keys(state.review).length>0;
+  if(!SYNC_STATE.token && !hasLocalData && !hasReviewData){
+    setTimeout(function(){
+      showToast('\uD83D\uDCF1 \u68C0\u6D4B\u5230\u65B0\u8BBE\u5907\uFF0C\u8BF7\u6ED1\u52A8\u5230\u5E95\u90E8\u8BBE\u7F6E\u4E91\u540C\u6B65\u6062\u590D\u6570\u636E', 5000);
+    },1500);
+  }
 }
 document.addEventListener('DOMContentLoaded',init);
 
