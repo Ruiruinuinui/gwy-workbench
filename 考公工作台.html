@@ -1109,6 +1109,7 @@ function setupSync(token){
       saveSyncState();
       updateSyncUI();
     }
+    startSyncPoll();
   }).catch(function(e){
     SYNC_STATE.token=''; SYNC_STATE.tokenHint=''; SYNC_STATE.gistId='';
     SYNC_STATE.status='off'; SYNC_STATE.msg='';
