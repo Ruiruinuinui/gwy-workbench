@@ -12,7 +12,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>考公工作台 · 小布伴学 v3.4</title>
+<title>考公工作台 · 小布伴学 v3.5</title>
 <script src="hot_topics.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -910,9 +910,43 @@ function updateStreak(){
 }
 
 // ===== INIT =====
+var syncPollTimer=null;
+function startSyncPoll(){
+  if(syncPollTimer) return;
+  syncPollTimer=setInterval(function(){
+    if(syncEnabled()) autoPull(true);
+  },60000);
+}
 function init(){ loadState(); state.activeTimer=null; if(timerInterval){clearInterval(timerInterval);timerInterval=null;} fallbackHotTopics(); loadHotTopics();
-  // 如果开启了云同步，自动拉取
-  if(syncEnabled()){ autoPull(); }
+  // 如果开启了云同步，先验证 gistId 是否匹配共享 Gist（解决多设备各建各的历史问题）
+  if(SYNC_STATE.token && SYNC_STATE.gistId){
+    findExistingGist().then(function(existing){
+      if(existing && existing.id!==SYNC_STATE.gistId){
+        // 发现共享 Gist 但本地 gistId 不对 → 更新并拉取
+        SYNC_STATE.gistId=existing.id; saveSyncState();
+      }
+      return cloudPull();
+    }).catch(function(){
+      return cloudPull();
+    }).then(function(){
+      startSyncPoll();
+    });
+  } else if(SYNC_STATE.token){
+    // 有 token 但没 gistId → 搜索或创建
+    createNewGist().then(function(d){
+      SYNC_STATE.gistId=d.id; SYNC_STATE.status='ok'; SYNC_STATE.msg='';
+      saveSyncState(); renderAll();
+      return cloudPull();
+    }).then(function(){
+      startSyncPoll();
+    }).catch(function(e){
+      SYNC_STATE.token=''; SYNC_STATE.tokenHint=''; SYNC_STATE.gistId=''; SYNC_STATE.status='off'; SYNC_STATE.msg='';
+      saveSyncState(); renderAll();
+      startSyncPoll();
+    });
+  } else {
+    startSyncPoll();
+  }
 }
 document.addEventListener('DOMContentLoaded',init);
 
@@ -1085,6 +1119,7 @@ function setupSync(token){
 }
 
 function disableSync(){
+  if(syncPollTimer){clearInterval(syncPollTimer);syncPollTimer=null;}
   SYNC_STATE.token=''; SYNC_STATE.tokenHint=''; SYNC_STATE.gistId=''; SYNC_STATE.status='off'; SYNC_STATE.msg='';
   saveSyncState(); renderAll();
   showToast('\u2601\uFE0F \u4E91\u540C\u6B65\u5DF2\u5173\u95ED');
@@ -1133,17 +1168,17 @@ function cloudPush(silent){
   });
 }
 
-function cloudPull(){
+function cloudPull(silent){
   if(!SYNC_STATE.token) return Promise.resolve(false);
   if(!SYNC_STATE.gistId){
     // 没有 gistId，尝试用本地数据创建
     return createNewGist().then(function(d){
-      SYNC_STATE.gistId=d.id; SYNC_STATE.status='ok'; saveSyncState(); updateSyncUI(); return true;
+      SYNC_STATE.gistId=d.id; SYNC_STATE.status='ok'; saveSyncState(); if(!silent) updateSyncUI(); return true;
     }).catch(function(e){
-      SYNC_STATE.status='err'; SYNC_STATE.msg=e.message; saveSyncState(); updateSyncUI(); return false;
+      SYNC_STATE.status='err'; SYNC_STATE.msg=e.message; saveSyncState(); if(!silent) updateSyncUI(); return false;
     });
   }
-  SYNC_STATE.status='syncing'; updateSyncUI();
+  if(!silent){ SYNC_STATE.status='syncing'; updateSyncUI(); }
   return ghApi('https://api.github.com/gists/'+SYNC_STATE.gistId,'GET').then(function(d){
     var file=d.files['gwy_data.json'];
     if(!file||!file.content) throw new Error('\u6570\u636E\u4E3A\u7A7A');
@@ -1155,17 +1190,17 @@ function cloudPull(){
     var hasLocalData=state.todos&&Object.keys(state.todos).length>0;
     if(!hasRemoteData && hasLocalData){
       // 远端无数据但本地有 → 把本地数据推上去
-      SYNC_STATE.status='ok'; SYNC_STATE.msg='\u5DF2\u662F\u6700\u65B0'; saveSyncState(); updateSyncUI();
+      SYNC_STATE.status='ok'; SYNC_STATE.msg='\u5DF2\u662F\u6700\u65B0'; saveSyncState(); if(!silent) updateSyncUI();
       cloudPush(true);
       return true;
     }
     if(!hasRemoteData && !hasLocalData){
-      SYNC_STATE.status='ok'; SYNC_STATE.msg='\u5DF2\u662F\u6700\u65B0'; saveSyncState(); updateSyncUI();
+      SYNC_STATE.status='ok'; SYNC_STATE.msg='\u5DF2\u662F\u6700\u65B0'; saveSyncState(); if(!silent) updateSyncUI();
       return true;
     }
     // 对比时间戳，取较新的
     if(remoteTime<=localTime && hasLocalData){
-      SYNC_STATE.status='ok'; SYNC_STATE.msg='\u5DF2\u662F\u6700\u65B0'; saveSyncState(); updateSyncUI();
+      SYNC_STATE.status='ok'; SYNC_STATE.msg='\u5DF2\u662F\u6700\u65B0'; saveSyncState(); if(!silent) updateSyncUI();
       if(localTime>remoteTime) cloudPush(true);
       return true;
     }
@@ -1180,20 +1215,23 @@ function cloudPull(){
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     SYNC_STATE.status='ok'; SYNC_STATE.msg=T()+' \u5DF2\u540C\u6B65'; saveSyncState();
     renderAll();
-    showToast('\uD83D\uDD04 \u6570\u636E\u5DF2\u4ECE\u4E91\u7AEF\u540C\u6B65');
+    if(!silent) showToast('\uD83D\uDD04 \u6570\u636E\u5DF2\u4ECE\u4E91\u7AEF\u540C\u6B65');
     return true;
   }).catch(function(e){
     if(e.message&&e.message.indexOf('Not Found')>=0){
-      // Gist 不存在，用本地数据创建
-      return cloudPush(true);
+      // Gist 不存在，搜索共享 Gist
+      return findExistingGist().then(function(existing){
+        if(existing){ SYNC_STATE.gistId=existing.id; saveSyncState(); return cloudPull(silent); }
+        return cloudPush(true);
+      }).catch(function(){ return cloudPush(true); });
     }
-    SYNC_STATE.status='err'; SYNC_STATE.msg=e.message; saveSyncState(); updateSyncUI(); return false;
+    SYNC_STATE.status='err'; SYNC_STATE.msg=e.message; saveSyncState(); if(!silent) updateSyncUI(); return false;
   });
 }
 
-function autoPull(){
+function autoPull(silent){
   if(!syncEnabled()) return;
-  cloudPull().catch(function(){});
+  cloudPull(silent).catch(function(){});
 }
 
 function findExistingGist(){
