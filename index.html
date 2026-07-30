@@ -173,10 +173,39 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
   .plan-grid,.job-grid{grid-template-columns:1fr}
   .pie-wrap{flex-direction:column;align-items:flex-start}
 }
+.sync-fab{position:fixed;top:12px;right:12px;z-index:9999;width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.1);transition:transform .2s;user-select:none}
+.sync-fab:hover{transform:scale(1.1)}
+.sync-fab.spinning{animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.sync-panel{position:fixed;top:52px;right:12px;z-index:9999;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);padding:16px;width:290px;display:none;font-family:system-ui,sans-serif}
+.sync-panel h4{margin:0 0 10px;font-size:14px;color:#1e293b}
+.sync-panel input{width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;margin-bottom:8px;box-sizing:border-box}
+.sync-panel .btn-row{display:flex;gap:8px}
+.sync-panel button{flex:1;padding:8px;border:none;border-radius:6px;font-size:13px;cursor:pointer}
+.sync-panel .btn-save{background:#2563eb;color:#fff}
+.sync-panel .btn-sync{background:#f1f5f9;color:#334155}
+.sync-panel .hint{font-size:11px;color:#94a3b8;margin-top:8px;line-height:1.5}
+.sync-panel .last-sync{font-size:11px;color:#64748b;margin-top:6px}
+.sync-panel .status{font-size:12px;margin-top:6px;padding:4px 8px;border-radius:4px}
+.sync-panel .status.ok{background:#dcfce7;color:#16a34a}
+.sync-panel .status.err{background:#fef2f2;color:#dc2626}
 </style>
 </head>
 <body>
 <div id="app"></div>
+<div class="sync-fab" id="sync-fab" onclick="toggleSyncPanel()" title="数据同步">\u2699\uFE0F</div>
+<div class="sync-panel" id="sync-panel" style="display:none">
+<h4>\u2601\uFE0F \u6570\u636E\u540C\u6B65</h4>
+<input type="password" id="sync-token-input" placeholder="\u7C98\u8D34 GitHub Token\uFF08ghp_\u5F00\u5934\uFF09" />
+<div class="btn-row">
+<button class="btn-save" onclick="saveSyncToken()">\u4FDD\u5B58Token</button>
+<button class="btn-sync" onclick="cloudPush()">\u7ACB\u5373\u4E0A\u4F20</button>
+<button class="btn-sync" onclick="cloudPull()">\u62C9\u53D6\u4E91\u7AEF</button>
+</div>
+<div class="last-sync" id="sync-last-time"></div>
+<div class="status" id="sync-status" style="display:none"></div>
+<div class="hint">\u5728\u6BCF\u53F0\u8BBE\u5907\u8F93\u5165\u4E00\u6B21Token\u5373\u53EF\u3002Token\u4EC5\u5B58\u5728\u672C\u5730\u6D4F\u89C8\u5668\uFF0C\u4E0D\u4F1A\u4E0A\u4F20\u3002<br/>\u83B7\u53D6\u65B9\u6CD5\uFF1AGitHub \u2192 Settings \u2192 Developer settings \u2192 Personal access tokens \u2192 \u52FE\u9009 repo</div>
+</div>
 <div id="timer-bar">
   <span class="t-name" id="t-name">--</span>
   <span class="t-display" id="t-display">00:00:00</span>
@@ -236,7 +265,7 @@ function loadState(){
     state.dietViewDate=state.dietViewDate||'';
   }catch(e){ state = defaultState(); }
 }
-function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
+function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} cloudPushDebounced(); }
 
 // ===== HELPERS =====
 function T(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -814,8 +843,188 @@ function updateStreak(){
 }
 
 // ===== INIT =====
-function init(){ loadState(); state.activeTimer=null; if(timerInterval){clearInterval(timerInterval);timerInterval=null;} fallbackHotTopics(); loadHotTopics(); }
+function init(){ loadState(); state.activeTimer=null; if(timerInterval){clearInterval(timerInterval);timerInterval=null;} fallbackHotTopics(); loadHotTopics(); initSync(); }
 document.addEventListener('DOMContentLoaded',init);
+
+// ===== CLOUD SYNC =====
+var CLOUD_REPO='Ruiruinuinui/gwy-workbench';
+var CLOUD_FILE='user_data.json';
+var CLOUD_TOKEN_KEY='gwy_sync_token';
+var syncTimer=null;
+var syncStatus='idle';
+
+function getSyncToken(){ return localStorage.getItem(CLOUD_TOKEN_KEY)||''; }
+function setSyncToken(t){ localStorage.setItem(CLOUD_TOKEN_KEY,t); }
+
+function utf8ToBase64(str){
+  var bytes=new TextEncoder().encode(str);
+  var binary='';var chunk=8192;
+  for(var i=0;i<bytes.length;i+=chunk){
+    binary+=String.fromCharCode.apply(null,bytes.subarray(i,i+chunk));
+  }
+  return btoa(binary);
+}
+function base64ToUtf8(b64){
+  var binary=atob(b64);
+  var bytes=new Uint8Array(binary.length);
+  for(var i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+function cloudPull(){
+  var token=getSyncToken();
+  if(!token){updateSyncUI('offline');return;}
+  updateSyncUI('syncing');
+  fetch('https://api.github.com/repos/'+CLOUD_REPO+'/contents/'+CLOUD_FILE,{
+    headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}
+  })
+  .then(function(res){
+    if(res.status===404){updateSyncUI('synced');return null;}
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return res.json();
+  })
+  .then(function(data){
+    if(!data) return;
+    try{
+      var cloudContent=JSON.parse(base64ToUtf8(data.content));
+      if(cloudContent&&cloudContent.state){
+        var cloudTime=cloudContent.syncTime||'';
+        var localTime=localStorage.getItem('gwy_last_sync')||'';
+        if(cloudTime>localTime){
+          state=Object.assign(defaultState(),cloudContent.state);
+          state.todos=state.todos||{};state.review=state.review||{};
+          state.exercise=state.exercise||{};state.diet=state.diet||{};
+          state.interview=state.interview||{notes:''};
+          state.activeTimer=null;state.weeklyReviewNote=state.weeklyReviewNote||'';
+          state.dietViewDate=state.dietViewDate||'';
+          localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+          localStorage.setItem('gwy_last_sync',cloudTime);
+          renderAll();
+          showSyncStatus('ok','\u5DF2\u4ECE\u4E91\u7AEF\u6062\u590D\u6570\u636E');
+        } else {
+          showSyncStatus('ok','\u672C\u5730\u6570\u636E\u5DF2\u662F\u6700\u65B0');
+        }
+      }
+    }catch(e){console.warn('Parse cloud data failed:',e);showSyncStatus('err','\u89E3\u6790\u5931\u8D25');}
+    updateSyncUI('synced');
+    updateSyncLastTime();
+  })
+  .catch(function(err){
+    console.warn('Cloud pull failed:',err.message);
+    updateSyncUI('error');
+    showSyncStatus('err','\u62C9\u53D6\u5931\u8D25: '+err.message);
+  });
+}
+
+function cloudPush(){
+  var token=getSyncToken();
+  if(!token){toggleSyncPanel();return;}
+  updateSyncUI('syncing');
+  var now=new Date().toISOString();
+  var content={state:state,syncTime:now};
+  var encoded=utf8ToBase64(JSON.stringify(content));
+
+  fetch('https://api.github.com/repos/'+CLOUD_REPO+'/contents/'+CLOUD_FILE,{
+    headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}
+  })
+  .then(function(res){
+    if(res.status===404) return {sha:null};
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return res.json();
+  })
+  .then(function(data){
+    var body={message:'data sync '+new Date().toLocaleString('zh-CN'),content:encoded};
+    if(data&&data.sha) body.sha=data.sha;
+    return fetch('https://api.github.com/repos/'+CLOUD_REPO+'/contents/'+CLOUD_FILE,{
+      method:'PUT',
+      headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+  })
+  .then(function(res){
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return res.json();
+  })
+  .then(function(){
+    localStorage.setItem('gwy_last_sync',now);
+    updateSyncUI('synced');
+    updateSyncLastTime();
+    showSyncStatus('ok','\u4E0A\u4F20\u6210\u529F');
+  })
+  .catch(function(err){
+    console.warn('Cloud push failed:',err.message);
+    updateSyncUI('error');
+    showSyncStatus('err','\u4E0A\u4F20\u5931\u8D25: '+err.message);
+  });
+}
+
+function cloudPushDebounced(){
+  if(syncTimer) clearTimeout(syncTimer);
+  syncTimer=setTimeout(function(){cloudPush();},3000);
+}
+
+function updateSyncUI(status){
+  syncStatus=status;
+  var btn=document.getElementById('sync-fab');
+  if(!btn) return;
+  var icons={idle:'\uD83D\uDD04',syncing:'\u23F3',synced:'\u2705',error:'\u274C',offline:'\u2699\uFE0F'};
+  var titles={idle:'\u70B9\u51FB\u540C\u6B65',syncing:'\u540C\u6B65\u4E2D...',synced:'\u5DF2\u540C\u6B65',error:'\u540C\u6B65\u5931\u8D25\uFF0C\u70B9\u51FB\u91CD\u8BD5',offline:'\u672A\u914D\u7F6E\u540C\u6B65\uFF0C\u70B9\u51FB\u8BBE\u7F6E'};
+  btn.textContent=icons[status]||'\uD83D\uDD04';
+  btn.title=titles[status]||'';
+  if(status==='syncing'){btn.classList.add('spinning');}else{btn.classList.remove('spinning');}
+}
+
+function showSyncStatus(type,msg){
+  var el=document.getElementById('sync-status');
+  if(!el) return;
+  el.style.display='block';
+  el.className='status '+(type==='ok'?'ok':'err');
+  el.textContent=msg;
+  setTimeout(function(){el.style.display='none';},4000);
+}
+
+function updateSyncLastTime(){
+  var el=document.getElementById('sync-last-time');
+  if(!el) return;
+  var t=localStorage.getItem('gwy_last_sync');
+  if(t){
+    var d=new Date(t);
+    var m=d.getMonth()+1;
+    el.textContent='\u4E0A\u6B21\u540C\u6B65\uFF1A'+m+'\u6708'+d.getDate()+'\u65E5 '+d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+  } else {
+    el.textContent='\u5C1A\u672A\u540C\u6B65\u8FC7';
+  }
+}
+
+function toggleSyncPanel(){
+  var panel=document.getElementById('sync-panel');
+  if(panel.style.display==='none'||!panel.style.display){
+    panel.style.display='block';
+    updateSyncLastTime();
+    var input=document.getElementById('sync-token-input');
+    if(input&&!getSyncToken()) input.focus();
+  } else {
+    panel.style.display='none';
+  }
+}
+
+function saveSyncToken(){
+  var input=document.getElementById('sync-token-input');
+  if(input&&input.value.trim()){
+    setSyncToken(input.value.trim());
+    input.value='';
+    document.getElementById('sync-panel').style.display='none';
+    cloudPull();
+  }
+}
+
+function initSync(){
+  if(getSyncToken()){
+    cloudPull();
+  } else {
+    updateSyncUI('offline');
+  }
+}
 </script>
 </body>
 </html>
