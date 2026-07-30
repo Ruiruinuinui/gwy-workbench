@@ -1,0 +1,18 @@
+{
+  "name": "考公工作台 · 小布伴学",
+  "short_name": "考公工作台",
+  "description": "考公备考个人学习管理仪表盘",
+  "start_url": "./考公工作台.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f1f5f9",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
