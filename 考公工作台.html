@@ -12,7 +12,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>考公工作台 · 小布伴学 v3.3</title>
+<title>考公工作台 · 小布伴学 v3.4</title>
 <script src="hot_topics.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1064,11 +1064,11 @@ function setupSync(token){
   SYNC_STATE.msg='';
   saveSyncState();
   renderAll();
-  // 先创建 Gist，再推送数据
+  // 搜索或创建 Gist，然后自动拉取（timestamp 对比决定谁覆盖谁）
   createNewGist().then(function(d){
     SYNC_STATE.gistId=d.id;
     saveSyncState();
-    return cloudPush(false);
+    return cloudPull();
   }).then(function(success){
     if(success){
       SYNC_STATE.status='ok'; SYNC_STATE.msg=T()+' \u5DF2\u540C\u6B65';
