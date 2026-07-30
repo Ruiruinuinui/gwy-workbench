@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>考公工作台 · 小布伴学</title>
+<script src="hot_topics.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f1f5f9;--card:#fff;--text:#1e293b;--text2:#64748b;--text3:#94a3b8;
+  --border:#e2e8f0;--pri:#3b82f6;--pri2:#eff6ff;--pri3:#2563eb;
+  --ok:#10b981;--ok2:#ecfdf5;--warn:#f59e0b;--danger:#ef4444;
+  --shadow:0 1px 3px rgba(0,0,0,.06);--radius:10px;--r2:6px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+#app{max-width:900px;margin:0 auto;padding:16px 20px 60px}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
+.card-hdr{font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.card-hdr .arrow{font-size:10px;color:var(--text3);transition:.2s;margin-left:auto}
+.card-hdr.collapsed .arrow{transform:rotate(-90deg)}
+.card-body{overflow:hidden;transition:max-height .3s ease}
+.card-body.hidden{max-height:0}
+.cdown-card{background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border-radius:var(--radius);padding:18px;margin-bottom:14px;cursor:pointer;position:relative}
+.cdown-card .days{font-size:44px;font-weight:800;line-height:1}
+.cdown-card .label{font-size:12px;opacity:.85;margin-top:2px}
+.cdown-card .exam{font-size:14px;margin-top:2px;font-weight:600}
+.cdown-card .edit-hint{position:absolute;top:12px;right:14px;font-size:11px;opacity:.6}
+.cdown-edit{background:var(--card);border:2px solid var(--pri);border-radius:var(--radius);padding:14px;margin-bottom:14px;display:none}
+.cdown-edit.show{display:block}
+.cdown-edit .edit-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.cdown-edit .edit-row label{font-size:13px;font-weight:600;color:var(--text);min-width:60px}
+.cdown-edit .edit-row input{padding:8px 12px;border:1px solid var(--border);border-radius:var(--r2);font-size:13px;outline:none;flex:1;background:var(--bg)}
+.cdown-edit .edit-row input:focus{border-color:var(--pri)}
+.cdown-edit .edit-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.cdown-edit .edit-actions button{padding:8px 18px;border-radius:var(--r2);cursor:pointer;font-size:13px;font-weight:600;border:none}
+.cdown-edit .btn-save{background:var(--pri);color:#fff}
+.cdown-edit .btn-save:hover{background:var(--pri3)}
+.cdown-edit .btn-cancel{background:var(--border);color:var(--text2)}
+.stats-row{display:flex;gap:12px;margin-bottom:14px}
+.stat-card{flex:1;min-width:100px;background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);text-align:center}
+.stat-card .val{font-size:26px;font-weight:800;color:var(--pri)}
+.stat-card .val.green{color:var(--ok)}
+.stat-card .lbl{font-size:12px;color:var(--text3);margin-top:2px}
+
+/* Todo */
+.todo-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r2);font-size:13px;transition:.15s}
+.todo-row:hover{background:var(--bg)}
+.todo-row.timing{background:var(--pri2)}
+.todo-row.done .todo-check{border-color:var(--ok);background:var(--ok);color:#fff}
+.todo-row.done .todo-text{text-decoration:line-through;color:var(--text3)}
+.todo-check{width:18px;height:18px;border:2px solid var(--border);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;cursor:pointer;transition:.15s}
+.todo-text{flex:1;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.todo-mod{font-size:10px;color:var(--text3);background:var(--border);border-radius:8px;padding:1px 6px;flex-shrink:0}
+.todo-dur{font-size:12px;color:var(--pri);font-weight:600;min-width:42px;text-align:right;flex-shrink:0}
+.todo-btn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;color:var(--text3);transition:.15s}
+.todo-btn:hover{border-color:var(--pri);color:var(--pri);background:var(--pri2)}
+.todo-btn.timing{background:var(--danger);color:#fff;border-color:var(--danger);animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.todo-del{font-size:12px;color:var(--text3);cursor:pointer;padding:2px;border:none;background:none;flex-shrink:0}
+.todo-del:hover{color:var(--danger)}
+.todo-add-row{display:flex;gap:6px;padding:6px 10px;flex-wrap:wrap}
+.todo-add-row input{flex:1;min-width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--r2);font-size:12px;outline:none;background:var(--card)}
+.todo-add-row input:focus{border-color:var(--pri)}
+.todo-add-row select{padding:7px 6px;border:1px solid var(--border);border-radius:var(--r2);font-size:12px;outline:none;background:var(--card);color:var(--text2)}
+.todo-add-row button{padding:7px 14px;border:none;border-radius:var(--r2);background:var(--pri);color:#fff;font-size:12px;cursor:pointer;font-weight:600}
+
+/* Module list */
+.mod-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r2);cursor:pointer;font-size:13px;color:var(--text2);transition:.15s;margin-bottom:2px}
+.mod-row:hover{background:var(--bg);color:var(--text)}
+.mod-row.active{background:var(--pri2);color:var(--pri);font-weight:600}
+.mod-row .mod-icon{font-size:16px}
+.mod-row .mod-time{margin-left:auto;font-size:11px;color:var(--pri);background:var(--pri2);border-radius:10px;padding:2px 8px}
+.mod-row .rest-tag{font-size:10px;background:var(--ok2);color:var(--ok);border-radius:10px;padding:1px 7px}
+
+/* Review */
+.review-stars{display:flex;gap:2px;cursor:pointer;margin-bottom:8px}
+.review-star{font-size:24px;color:var(--border);transition:.15s}
+.review-star.on{color:var(--warn)}
+.review-field{margin-bottom:8px}
+.review-field label{display:block;font-size:12px;color:var(--text2);margin-bottom:3px;font-weight:600}
+.review-field textarea{width:100%;min-height:60px;padding:10px;border:1px solid var(--border);border-radius:var(--r2);font-size:13px;resize:vertical;outline:none;font-family:inherit}
+.review-field textarea:focus{border-color:var(--pri)}
+.btn{padding:8px 18px;border:none;border-radius:var(--r2);cursor:pointer;font-size:13px;font-weight:600}
+.btn-pri{background:var(--pri);color:#fff}
+.btn-pri:hover{background:var(--pri3)}
+
+/* Plan cards */
+.plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.plan-card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);border-left:4px solid var(--border);transition:.2s}
+.plan-card.active-phase{border-left-width:5px;box-shadow:0 4px 16px rgba(59,130,246,.15);transform:scale(1.02)}
+.plan-card .p-title{font-size:14px;font-weight:700;color:var(--text)}
+.plan-card .p-time{font-size:11px;color:var(--pri);margin:4px 0}
+.plan-card .p-desc{font-size:12px;color:var(--text2);line-height:1.6}
+.plan-card .p-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-top:6px;background:var(--pri);color:#fff}
+.plan-card .p-tip{font-size:11px;color:var(--pri);margin-top:8px;font-weight:600}
+
+/* Job */
+.job-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.job-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;box-shadow:var(--shadow)}
+.job-card .j-title{font-size:13px;font-weight:700;color:var(--text)}
+.job-card .j-info{font-size:11px;color:var(--text2);margin-top:4px}
+.job-card .j-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.job-card .j-tag{font-size:10px;background:var(--border);border-radius:10px;padding:2px 8px;color:var(--text2)}
+.job-form{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.job-form select,.job-form input{padding:7px 10px;border:1px solid var(--border);border-radius:var(--r2);font-size:12px;outline:none}
+.job-form select:focus,.job-form input:focus{border-color:var(--pri)}
+.job-form button{padding:7px 14px;background:var(--pri);color:#fff;border:none;border-radius:var(--r2);cursor:pointer;font-size:12px;font-weight:600}
+
+/* Interview hot topics - expandable */
+.interview-grid{display:flex;flex-direction:column;gap:10px}
+.hot-card{cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);transition:.2s}
+.hot-card:hover{border-color:var(--pri)}
+.hot-card .hot-meta{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.hot-card .hot-cat{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;color:#fff}
+.hot-card .hot-src{font-size:10px;color:var(--text3)}
+.hot-card .hot-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px}
+.hot-card .hot-summary{font-size:12px;color:var(--text2);line-height:1.6}
+.hot-card .hot-expand{font-size:11px;color:var(--pri);font-weight:600;margin-top:8px;display:flex;align-items:center;gap:4px}
+.hot-card .hot-expand .chevron{transition:.2s;display:inline-block}
+.hot-card.expanded .hot-expand .chevron{transform:rotate(180deg)}
+.hot-card .hot-full{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.hot-card.expanded .hot-full{display:block}
+.hot-card .hot-article{font-size:13px;color:var(--text);line-height:1.85;margin-bottom:12px;text-indent:2em}
+.hot-card .hot-commentary{font-size:13px;color:var(--pri);line-height:1.85;background:var(--pri2);padding:12px;border-radius:var(--r2);border-left:3px solid var(--pri)}
+.hot-card .hot-commentary-tag{font-size:11px;font-weight:700;color:var(--pri);margin-bottom:4px}
+.hot-card .hot-commentary-body{font-size:13px;color:var(--text);line-height:1.85;text-indent:2em}
+
+/* Exercise / Diet */
+.record-item{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;color:var(--text2);border-radius:var(--r2)}
+.record-item:hover{background:var(--bg)}
+.record-adder{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;padding:0 12px}
+.record-adder input,.record-adder select{padding:7px 10px;border:1px solid var(--border);border-radius:var(--r2);font-size:12px;outline:none}
+.record-adder button{padding:7px 14px;background:var(--pri);color:#fff;border:none;border-radius:var(--r2);cursor:pointer;font-size:12px;font-weight:600}
+.btn-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 4px}
+.btn-del:hover{color:var(--danger)}
+
+/* Week summary table */
+.wk-table{width:100%;border-collapse:collapse;font-size:13px}
+.wk-table th{background:var(--bg);padding:10px 12px;text-align:left;color:var(--text2);font-weight:600;border-bottom:2px solid var(--border)}
+.wk-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+.wk-table .wk-day{font-weight:600;white-space:nowrap}
+.wk-table .wk-cell{font-size:12px;color:var(--text2)}
+
+/* Pie chart */
+.pie-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.pie-legend{display:flex;flex-direction:column;gap:6px}
+.pie-lg-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)}
+.pie-lg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* Diet kcal highlight */
+.kcal-badge{font-size:13px;font-weight:700;color:var(--warn);margin-left:auto}
+.kcal-total{font-size:11px;color:var(--warn);font-weight:600;margin-left:6px}
+
+/* Timer */
+#timer-bar{position:fixed;bottom:0;left:0;right:0;height:44px;background:var(--card);border-top:1px solid var(--border);display:none;align-items:center;justify-content:center;gap:16px;padding:0 20px;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.05)}
+#timer-bar.show{display:flex}
+#timer-bar .t-display{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text)}
+#timer-bar .t-name{font-size:13px;color:var(--text2)}
+#timer-bar .t-pause,#timer-bar .t-complete{padding:6px 14px;border-radius:var(--r2);border:none;cursor:pointer;font-size:12px;font-weight:600}
+#timer-bar .t-pause{background:var(--warn);color:#fff}
+#timer-bar .t-complete{background:var(--ok);color:#fff}
+
+.empty{text-align:center;padding:30px;color:var(--text3);font-size:13px}
+
+.mod-todo-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mod-todo-header .back{font-size:12px;color:var(--pri);cursor:pointer;font-weight:600}
+.mod-todo-header .back:hover{text-decoration:underline}
+
+@media (max-width:640px){
+  #app{padding:10px 12px 60px}
+  .stats-row{flex-direction:column;gap:8px}
+  .plan-grid,.job-grid{grid-template-columns:1fr}
+  .pie-wrap{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="timer-bar">
+  <span class="t-name" id="t-name">--</span>
+  <span class="t-display" id="t-display">00:00:00</span>
+  <button class="t-pause" onclick="stopTimer()">&#x23F8; 暂停</button>
+  <button class="t-complete" onclick="completeActiveTimer()">&#x2713; 完成</button>
+</div>
+
+<script>
+// ===== DATA =====
+var STORAGE_KEY = 'wb_desk_v9';
+var MODULES = [
+  { id:'speech', name:'言语理解', icon:'\uD83D\uDDE3\uFE0F', color:'#3b82f6' },
+  { id:'judgment', name:'判断推理', icon:'\uD83E\uDDE0', color:'#8b5cf6' },
+  { id:'common', name:'常识判断', icon:'\uD83D\uDCD6', color:'#f59e0b' },
+  { id:'data', name:'资料分析', icon:'\uD83D\uDCCA', color:'#10b981' },
+  { id:'quantity', name:'数量关系', icon:'\uD83D\uDD22', color:'#ef4444' },
+  { id:'essay', name:'申论', icon:'\u270D\uFE0F', color:'#ec4899' },
+  { id:'zongying', name:'综应A类', icon:'\uD83D\uDCDD', color:'#06b6d4' },
+  { id:'teaching', name:'数学备课', icon:'\uD83D\uDCD0', color:'#84cc16' },
+];
+
+var sampleJobs = [
+  {t:'国家税务局',info:'行政执法类',tags:['本科及以上','应届不限','专业宽泛']},
+  {t:'海关总署',info:'综合管理类',tags:['本科及以上','应届可报','需体检']},
+  {t:'统计局调查队',info:'专业技术类',tags:['本科及以上','应届可报','统计学/经济学']},
+  {t:'铁路公安局',info:'行政执法类',tags:['专科及以上','公安学类','体能测试']},
+  {t:'海事局',info:'行政执法类',tags:['本科及以上','航海/海事','需出海']},
+  {t:'省级发改委',info:'综合管理类',tags:['本科及以上','2年经验','经济/管理类']},
+  {t:'街道办事处',info:'基层管理类',tags:['专科及以上','不限经验','不限专业']},
+  {t:'市场监管局',info:'行政执法类',tags:['本科及以上','法学/食药相关']},
+  {t:'气象局',info:'专业技术类',tags:['本科及以上','大气科学','科研辅助']},
+  {t:'外事办',info:'综合管理类',tags:['本科及以上','外语类','翻译能力']},
+];
+
+// ===== STATE =====
+var defaultState = function(){
+  return {
+    countdown: { name:'国考', date:'2026-11-29' },
+    todos: {}, review: {}, exercise: {}, diet: {},
+    interview: { notes:'' },
+    activeTimer: null, streak: 0, teachingActive: false,
+    weeklyReviewNote: '', dietViewDate: '',
+  };
+};
+var state = defaultState();
+var timerInterval = null;
+
+// ===== PERSIST =====
+function loadState(){
+  try{
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ var saved = JSON.parse(raw); state = Object.assign(defaultState(), saved); }
+    state.todos=state.todos||{}; state.review=state.review||{};
+    state.exercise=state.exercise||{}; state.diet=state.diet||{};
+    state.interview=state.interview||{notes:''};
+    state.activeTimer=null; state.weeklyReviewNote=state.weeklyReviewNote||'';
+    state.dietViewDate=state.dietViewDate||'';
+  }catch(e){ state = defaultState(); }
+}
+function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
+
+// ===== HELPERS =====
+function T(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function genId(){ return 't'+Date.now()+'_'+Math.random().toString(36).slice(2,7); }
+function taskMs(task){ if(!task||!task.sessions) return 0; return task.sessions.reduce(function(s,se){return s+(se.end-se.start);},0); }
+function fmtDur(ms){ if(!ms) return '0m'; var m=Math.floor(ms/60000); return m>=60?Math.floor(m/60)+'h'+(m%60)+'m':m+'m'; }
+function fmtShort(ms){ if(!ms) return ''; var m=Math.floor(ms/60000); return m>=60?Math.floor(m/60)+'h'+(m%60)+'m':m+'m'; }
+function fmtHH(s){ return String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor((s%3600)/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+function daysLeft(dateStr){ return dateStr?Math.max(0,Math.ceil((Date.parse(dateStr)-Date.now())/86400000)):0; }
+function greet(){ var h=new Date().getHours(); return h<6?'夜深了':h<12?'上午好':h<14?'中午好':h<18?'下午好':h<21?'晚上好':'夜深了'; }
+function dayLabel(off){ var d=new Date();d.setDate(d.getDate()-off); return (d.getMonth()+1)+'/'+d.getDate(); }
+
+function todayStudyMs(){
+  var t=T(), total=0;
+  (state.todos[t]||[]).forEach(function(td){ total+=taskMs(td); });
+  return total;
+}
+function moduleTimeToday(modId){
+  var t=T(), total=0;
+  (state.todos[t]||[]).forEach(function(td){ if(td.moduleId===modId) total+=taskMs(td); });
+  return total;
+}
+function moduleTimeRange(modId, daysBack){
+  var total=0;
+  for(var i=0;i<daysBack;i++){ var d=new Date();d.setDate(d.getDate()-i); var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); (state.todos[k]||[]).forEach(function(td){ if(td.moduleId===modId) total+=taskMs(td); }); }
+  return total;
+}
+
+// ===== RENDER ALL =====
+function renderAll(){ renderApp(); updateTimerUI(); }
+
+function renderApp(){
+  var el=document.getElementById('app'); if(!el) return;
+  var today=T();
+  var totalMs=todayStudyMs();
+  var totalSec=Math.floor(totalMs/1000);
+  var studyH=Math.floor(totalSec/3600), studyM=Math.floor((totalSec%3600)/60);
+  var dLeft=daysLeft(state.countdown.date);
+  var todos=todayTodos();
+  var completed=todos.filter(function(t){return t.done;}).length;
+
+  var html='';
+
+  // ========== HEADER: Countdown + Stats ==========
+  html+='<div class="cdown-card" onclick="toggleCountdownEdit()"><div class="edit-hint">\u270E \u8BBE\u7F6E</div><div class="days">'+dLeft+'</div><div class="label">天 · '+greet()+'\uFF0C\u540C\u5B66</div><div class="exam">\u8DDD'+state.countdown.name+' '+state.countdown.date+'</div></div>';
+  html+='<div class="cdown-edit" id="cdown-edit"><div class="edit-row"><label>\u8003\u8BD5\u540D\u79F0</label><input id="ce-name" placeholder="\u4F8B\u5982\uff1a\u56FD\u8003\u3001\u7701\u8003\u3001\u4E8B\u4E1A\u5355\u4F4D..." value="'+(state.countdown.name||'')+'"></div><div class="edit-row"><label>\u8003\u8BD5\u65E5\u671F</label><input id="ce-date" type="date" value="'+(state.countdown.date||'')+'"></div><div class="edit-actions"><button class="btn-cancel" onclick="toggleCountdownEdit()">\u53D6\u6D88</button><button class="btn-save" onclick="saveCountdown()">\uD83D\uDCBE \u4FDD\u5B58</button></div></div>';
+  html+='<div class="stats-row">';
+  html+='<div class="stat-card"><div class="val">'+studyH+'h '+studyM+'m</div><div class="lbl">\u4ECA\u65E5\u5B66\u4E60</div></div>';
+  html+='<div class="stat-card"><div class="val green">'+(state.streak||0)+'</div><div class="lbl">\u8FDE\u7EED\u6253\u5361</div></div>';
+  html+='<div class="stat-card"><div class="val">'+completed+'/'+todos.length+'</div><div class="lbl">\u4ECA\u65E5\u4EFB\u52A1</div></div>';
+  html+='</div>';
+
+  // ========== TODAY TASKS ==========
+  html+='<div class="card"><div class="card-hdr" onclick="toggleCard(this)" id="hdr-todo"><span>\u2611\uFE0F \u4ECA\u65E5\u4EFB\u52A1 ('+todos.length+')</span><span class="arrow">\u25BE</span></div><div class="card-body" id="body-todo">';
+  html+=renderTodoList();
+  html+='<div class="todo-add-row"><input id="todo-input" placeholder="\u6DFB\u52A0\u4ECA\u65E5\u4EFB\u52A1..." onkeydown="if(event.key===\'Enter\')todoAdd()"><select id="todo-mod"><option value="">\u9009\u62E9\u6A21\u5757</option>';
+  MODULES.forEach(function(m){ html+='<option value="'+m.id+'">'+m.name+'</option>'; });
+  html+='</select><button onclick="todoAdd()">+</button></div>';
+  html+='</div></div>';
+
+  // ========== DAILY REVIEW ==========
+  var rev=state.review[today]||{}; var rating=rev.rating||0;
+  html+='<div class="card"><div class="card-hdr" onclick="toggleCard(this)"><span>\uD83D\uDCDD \u6BCF\u65E5\u590D\u76D8'+(rating>0?' ('+'\u2605'.repeat(rating)+')':'')+'</span><span class="arrow">\u25BE</span></div><div class="card-body" style="padding:0 12px 8px;">';
+  html+='<div class="review-stars">';
+  for(var i=1;i<=5;i++){ html+='<span class="review-star '+(i<=rating?'on':'')+'" onclick="event.stopPropagation();reviewRate('+i+')">\u2605</span>'; }
+  html+='<span style="font-size:12px;color:var(--text3);margin-left:8px;">'+(rating||'\u70B9\u51FB\u8BC4\u5206')+'</span></div>';
+  html+='<div class="review-field"><label>\u2705 \u4ECA\u65E5\u6536\u83B7</label><textarea id="rev-gain" onchange="reviewSave()">'+(rev.gain||'')+'</textarea></div>';
+  html+='<div class="review-field"><label>\u2757 \u4E0D\u8DB3\u53CD\u601D</label><textarea id="rev-weak" onchange="reviewSave()">'+(rev.weakness||'')+'</textarea></div>';
+  html+='<div class="review-field"><label>\uD83D\uDCC5 \u660E\u65E5\u89C4\u5212</label><textarea id="rev-plan" onchange="reviewSave()">'+(rev.plan||'')+'</textarea></div>';
+  html+='<button class="btn btn-pri" onclick="reviewSave();renderAll();" style="margin-top:4px;">\uD83D\uDCBE \u4FDD\u5B58</button>';
+  html+='</div></div>';
+
+  // ========== WEEKLY REVIEW ==========
+  html+=renderWeeklyReview();
+
+  // ========== WEEKLY OVERVIEW (Pie Chart) ==========
+  html+=renderWeeklyChart();
+
+  // ========== LEARNING MODULES ==========
+  html+='<div class="card"><div class="card-hdr" onclick="toggleCard(this)"><span>\uD83D\uDCDA \u5B66\u4E60\u6A21\u5757</span><span class="arrow">\u25BE</span></div><div class="card-body" style="padding:0 8px 8px;">';
+  MODULES.forEach(function(m){
+    var modMs=moduleTimeToday(m.id);
+    var isTeaching=m.id==='teaching';
+    html+='<div class="mod-row" onclick="toggleModuleTodo(\''+m.id+'\')">';
+    html+='<span class="mod-icon">'+m.icon+'</span> '+m.name;
+    if(modMs>0) html+='<span class="mod-time">\u231B '+fmtDur(modMs)+'</span>';
+    if(isTeaching&&!state.teachingActive) html+='<span class="rest-tag">\u4F11\u8BFE\u4E2D</span>';
+    html+='</div>';
+    html+='<div id="mod-todo-'+m.id+'" style="display:none;margin:0 0 8px 20px;padding:8px;background:var(--pri2);border-radius:var(--r2);font-size:11px;color:var(--text3);"></div>';
+  });
+  if(!state.teachingActive) html+='<div style="padding:8px 12px;font-size:11px;color:var(--text3);">\uD83D\uDCD0 \u6570\u5B66\u5907\u8BFE\u6A21\u5757\u4F11\u8BFE\u4E2D \u00B7 <span style="color:var(--pri);cursor:pointer;font-weight:600;" onclick="toggleTeaching()">\u542F\u7528</span></div>';
+  else html+='<div style="padding:8px 12px;font-size:11px;color:var(--text3);">\uD83D\uDCD0 \u6570\u5B66\u5907\u8BFE\u6A21\u5757\u5DF2\u542F\u7528 \u00B7 <span style="color:var(--pri);cursor:pointer;font-weight:600;" onclick="toggleTeaching()">\u6682\u505C</span></div>';
+  html+='</div></div>';
+
+  // ========== EXAM INFO ==========
+  html+='<div class="card"><div class="card-hdr" onclick="toggleCard(this)"><span>\uD83D\uDCCB \u8003\u8BD5\u4FE1\u606F</span><span class="arrow">\u25BE</span></div><div class="card-body">';
+  html+=renderPlanSection();
+  html+=renderJobSection();
+  html+='</div></div>';
+
+  // ========== INTERVIEW - 热点剖析 ==========
+  html+='<div class="card"><div class="card-hdr" onclick="toggleCard(this)"><span>\uD83D\uDD25 \u70ED\u70B9\u5256\u6790</span><span class="arrow">\u25BE</span></div><div class="card-body">';
+  html+=renderInterviewSection();
+  html+='</div></div>';
+
+  // ========== EXERCISE ==========
+  var exercises=state.exercise[today]||[];
+  var exTotal=exercises.reduce(function(s,e){return s+(parseInt(e.duration)||0);},0);
+  html+='<div class="card"><div class="card-hdr" onclick="toggleCard(this)"><span>\uD83C\uDFC3 \u8FD0\u52A8\u8BB0\u5F55 \u00B7 '+exTotal+'\u5206\u949F</span><span class="arrow">\u25BE</span></div><div class="card-body">';
+  html+=renderExerciseSection();
+  html+='</div></div>';
+
+  // ========== DIET ==========
+  var dietDate=state.dietViewDate||today;
+  var diets=state.diet[dietDate]||[];
+  var kcalTotal=diets.reduce(function(s,d){return s+(parseInt(d.kcal)||0);},0);
+  var isDietToday=dietDate===today;
+  html+='<div class="card"><div class="card-hdr" onclick="toggleCard(this)"><span>\uD83C\uDF7D\uFE0F \u996E\u98DF\u8BB0\u5F55 \u00B7 '+(isDietToday?'\u4ECA\u65E5':dietDate)+'</span><span class="kcal-total">\uD83D\uDD25 '+(kcalTotal||0)+' kcal</span><span class="arrow">\u25BE</span></div><div class="card-body">';
+  html+=renderDietSection(dietDate,isDietToday);
+  html+='</div></div>';
+
+  el.innerHTML=html;
+  loadModuleTodoData();
+}
+
+// ===== TODAY'S TODOS =====
+function todayTodos(){ return state.todos[T()]||[]; }
+function renderTodoList(filterModId){
+  var todos=todayTodos();
+  if(filterModId) todos=todos.filter(function(t){return t.moduleId===filterModId;});
+  var activeTid=state.activeTimer&&state.activeTimer.type==='todo'?state.activeTimer.taskId:null;
+  if(todos.length===0) return '<div class="empty">'+(filterModId?'\u8BE5\u6A21\u5757\u4ECA\u65E5\u6682\u65E0\u4EFB\u52A1':'\u4ECA\u65E5\u8FD8\u6CA1\u6709\u4EFB\u52A1\uFF0C\u6DFB\u52A0\u7B2C\u4E00\u4E2A\u5427')+'</div>';
+  var html='';
+  todos.forEach(function(td){
+    var dur=Math.floor(taskMs(td)/60000);
+    var timing=td.id===activeTid;
+    var modLabel='';
+    if(td.moduleId){
+      var mod=MODULES.find(function(m){return m.id===td.moduleId;});
+      if(mod) modLabel='<span class="todo-mod">'+mod.icon+' '+mod.name+'</span>';
+    }
+    html+='<div class="todo-row '+(td.done?'done':'')+' '+(timing?'timing':'')+'">';
+    html+='<div class="todo-check" onclick="event.stopPropagation();todoToggle(\''+td.id+'\')">'+(td.done?'\u2713':'')+'</div>';
+    html+=modLabel;
+    html+='<span class="todo-text" onclick="event.stopPropagation();todoToggle(\''+td.id+'\')">'+td.text+'</span>';
+    html+='<span class="todo-dur">'+(dur>0?fmtShort(taskMs(td)):'')+'</span>';
+    html+=timing?'<button class="todo-btn timing" onclick="event.stopPropagation();todoStopTimer()">\u25A0</button>':'<button class="todo-btn" onclick="event.stopPropagation();todoStartTimer(\''+td.id+'\')" title="'+(td.done?'\u91CD\u65B0\u8BA1\u65F6':'\u5F00\u59CB\u8BA1\u65F6')+'">'+(td.done?'\u21A9':'\u25B6')+'</button>';
+    html+='<button class="todo-del" onclick="event.stopPropagation();todoDelete(\''+td.id+'\')">\u2715</button></div>';
+  });
+  return html;
+}
+
+// ===== MODULE TODO TOGGLE =====
+function loadModuleTodoData(){
+  MODULES.forEach(function(m){
+    var el=document.getElementById('mod-todo-'+m.id); if(!el) return;
+    var todos=todayTodos().filter(function(t){return t.moduleId===m.id;});
+    if(todos.length===0) el.innerHTML='<span>\u4ECA\u65E5\u6682\u65E0\u8BE5\u6A21\u5757\u4EFB\u52A1</span>';
+    else el.innerHTML='<div>\u4ECA\u65E5 '+todos.length+'\u9879\u4EFB\u52A1 \u00B7 \u603B\u8BA1\u65F6 \u231B '+fmtDur(moduleTimeToday(m.id))+'</div>';
+  });
+}
+function toggleModuleTodo(modId){
+  var el=document.getElementById('mod-todo-'+modId); if(!el) return;
+  el.style.display=el.style.display==='none'?'block':'none';
+}
+
+// ===== CARD TOGGLE =====
+function toggleCard(hdr){
+  hdr.classList.toggle('collapsed');
+  var body=hdr.nextElementSibling;
+  if(body) body.classList.toggle('hidden');
+}
+
+// ===== WEEKLY REVIEW =====
+function renderWeeklyReview(){
+  var weekDays=[];
+  for(var i=6;i>=0;i--){ var d=new Date();d.setDate(d.getDate()-i); weekDays.push(d); }
+  var allMods=MODULES.filter(function(m){return m.id!=='teaching'||state.teachingActive;});
+  var weekData=[];
+  var weekTotal=0;
+  weekDays.forEach(function(d){
+    var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    var dayMs=0;
+    var dayMods={};
+    (state.todos[k]||[]).forEach(function(td){ var ms=taskMs(td); dayMs+=ms; if(td.moduleId){ dayMods[td.moduleId]=(dayMods[td.moduleId]||0)+ms; } });
+    weekData.push({date:k,label:dayLabel(6-((6-i))),ms:dayMs,mods:dayMods});
+    weekTotal+=dayMs;
+  });
+
+  var html='<div class="card"><div class="card-hdr" onclick="toggleCard(this)"><span>\uD83D\uDCCA \u6BCF\u5468\u590D\u76D8</span><span class="arrow">\u25BE</span></div><div class="card-body">';
+  html+='<p style="font-size:12px;color:var(--text2);margin-bottom:10px;">\u672C\u5468\u7D2F\u8BA1\u5B66\u4E60 \u231B <b style="color:var(--pri);">'+fmtDur(weekTotal)+'</b> \u00B7 \u6BCF\u65E5\u4EFB\u52A1\u81EA\u52A8\u540C\u6B65</p>';
+
+  html+='<div style="overflow-x:auto;"><table class="wk-table"><thead><tr><th>\u65E5\u671F</th><th>\u5B66\u4E60\u65F6\u957F</th><th>\u6A21\u5757\u5206\u5E03</th></tr></thead><tbody>';
+  weekData.forEach(function(wd){
+    var modParts=[];
+    allMods.forEach(function(m){
+      var ms=wd.mods[m.id]||0; if(ms>0) modParts.push(m.icon+' '+fmtDur(ms));
+    });
+    html+='<tr><td class="wk-day">'+wd.label+'</td><td style="font-weight:600;color:var(--pri);">'+fmtDur(wd.ms)+'</td><td class="wk-cell">'+(modParts.join(' \u00B7 ')||'\u2014')+'</td></tr>';
+  });
+  html+='</tbody></table></div>';
+
+  html+='<div class="review-field" style="margin-top:12px;"><label>\uD83D\uDCDD \u672C\u5468\u590D\u76D8\u603B\u7ED3</label><textarea id="wk-note" onchange="saveWeekNote()" placeholder="\u672C\u5468\u5B66\u4E60\u603B\u7ED3\u3001\u4E0B\u5468\u8BA1\u5212...">'+(state.weeklyReviewNote||'')+'</textarea></div>';
+  html+='</div></div>';
+  return html;
+}
+function saveWeekNote(){ state.weeklyReviewNote=document.getElementById('wk-note')?document.getElementById('wk-note').value:''; saveState(); }
+
+// ===== WEEKLY PIE CHART =====
+function renderWeeklyChart(){
+  var allMods=MODULES.filter(function(m){return m.id!=='teaching'||state.teachingActive;});
+  var modTimes=[];
+  var weekTotal=0;
+  allMods.forEach(function(m){
+    var ms=moduleTimeRange(m.id,7);
+    modTimes.push({mod:m,ms:ms});
+    weekTotal+=ms;
+  });
+  var activeMods=modTimes.filter(function(x){return x.ms>0;});
+  if(activeMods.length===0){
+    return '<div class="card"><div class="card-hdr"><span>\uD83D\uDCC8 \u672C\u5468\u6982\u89C8</span></div><div class="empty">\u672C\u5468\u8FD8\u6CA1\u6709\u5B66\u4E60\u8BB0\u5F55\uFF0C\u5F00\u59CB\u8BA1\u65F6\u540E\u81EA\u52A8\u751F\u6210\u997C\u72B6\u56FE</div></div>';
+  }
+  var html='<div class="card"><div class="card-hdr"><span>\uD83D\uDCC8 \u672C\u5468\u6982\u89C8 \u00B7 \u6A21\u5757\u65F6\u95F4\u5206\u5E03</span></div>';
+  html+='<div class="pie-wrap">';
+  html+='<canvas id="pie-canvas" width="200" height="200"></canvas>';
+  html+='<div class="pie-legend">';
+  activeMods.forEach(function(x){
+    var pct=weekTotal>0?Math.round(x.ms/weekTotal*100):0;
+    html+='<div class="pie-lg-item"><span class="pie-lg-dot" style="background:'+x.mod.color+';"></span>'+x.mod.icon+' '+x.mod.name+': <b>'+fmtDur(x.ms)+'</b> ('+pct+'%)</div>';
+  });
+  html+='</div></div></div>';
+
+  setTimeout(function(){ drawPieChart(activeMods); },50);
+  return html;
+}
+
+function drawPieChart(activeMods){
+  var canvas=document.getElementById('pie-canvas'); if(!canvas) return;
+  var ctx=canvas.getContext('2d');
+  var cx=100, cy=100, r=85;
+  ctx.clearRect(0,0,200,200);
+  if(activeMods.length===1){
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle=activeMods[0].mod.color; ctx.fill();
+  } else {
+    var total=activeMods.reduce(function(s,x){return s+x.ms;},0);
+    var startAngle=-Math.PI/2;
+    activeMods.forEach(function(x){
+      var sliceAngle=(x.ms/total)*Math.PI*2;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,startAngle,startAngle+sliceAngle); ctx.closePath();
+      ctx.fillStyle=x.mod.color; ctx.fill();
+      ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+      startAngle+=sliceAngle;
+    });
+  }
+  ctx.beginPath(); ctx.arc(cx,cy,45,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
+  ctx.fillStyle='#1e293b';
+  ctx.font='bold 16px -apple-system,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('\u672C\u5468',cx,cy-4);
+}
+
+// ===== PLAN =====
+function renderPlanSection(){
+  var dLeft=daysLeft(state.countdown.date);
+  var phaseIdx=0;
+  if(dLeft<=30) phaseIdx=2; else if(dLeft<=90) phaseIdx=1; else if(dLeft<=0) phaseIdx=3;
+  var plans=[
+    {t:'\u57FA\u7840\u9636\u6BB5',time:'当前距考试 '+dLeft+' 天',act:0,d:'\u2460 \u7CFB\u7EDF\u5B66\u4E60\u5404\u6A21\u5757\u57FA\u7840\u7406\u8BBA<br>\u2461 \u6BCF\u5B66\u5B8C\u4E00\u6A21\u5757\u914D\u5957\u4E13\u9879\u7EC3\u4E60<br>\u2462 \u6BCF\u5468\u5C0F\u6D4B\u9A8C\u67E5\u6F0F\u8865\u7F3A<br>\u2463 \u7533\u8BBA\u5F00\u59CB\u79EF\u7D2F\u7D20\u6750',tip:'\uD83D\uDCCC \u6BCF\u5929\u4FDD\u6301 3-4 \u5C0F\u65F6\u6709\u6548\u5B66\u4E60'},
+    {t:'\u5F3A\u5316\u9636\u6BB5',time:'\u8003\u524D 2-3 \u4E2A\u6708',act:1,d:'\u2460 \u5927\u91CF\u5237\u771F\u9898\u548C\u6A21\u62DF\u9898<br>\u2461 \u9488\u5BF9\u8584\u5F31\u6A21\u5757\u4E13\u9879\u7A81\u7834<br>\u2462 \u5F00\u59CB\u9650\u65F6\u8BAD\u7EC3\u63D0\u9AD8\u505A\u9898\u901F\u5EA6<br>\u2463 \u7533\u8BBA\u6BCF\u5468\u81F3\u5C11 2 \u7BC7\u5B8C\u6574\u7EC3\u4E60',tip:'\uD83D\uDCCC \u91CD\u70B9\u63D0\u5347\u901F\u5EA6\u548C\u51C6\u786E\u7387'},
+    {t:'\u51B2\u523A\u9636\u6BB5',time:'\u8003\u524D 1 \u4E2A\u6708',act:2,d:'\u2460 \u5168\u771F\u6A21\u62DF\u8003\u8BD5\u73AF\u5883<br>\u2461 \u590D\u76D8\u9519\u9898\uFF0C\u8865\u9F50\u77ED\u677F<br>\u2462 \u8C03\u6574\u505A\u9898\u987A\u5E8F\u548C\u65F6\u95F4\u5206\u914D<br>\u2463 \u7533\u8BBA\u80CC\u8BF5\u70ED\u70B9\u7D20\u6750',tip:'\uD83D\uDCCC \u8C03\u6574\u5FC3\u6001\uFF0C\u4FDD\u6301\u624B\u611F'},
+    {t:'\u9762\u8BD5\u9636\u6BB5',time:'\u7B14\u8BD5\u540E',act:3,d:'\u2460 \u7ED3\u6784\u5316\u9762\u8BD5\u7406\u8BBA\u5B66\u4E60<br>\u2461 \u6BCF\u65E5\u5F00\u53E3\u7EC3\u4E60 2-3 \u9053\u9898<br>\u2462 \u6A21\u62DF\u9762\u8BD5\u6D41\u7A0B<br>\u2463 \u79EF\u7D2F\u65F6\u4E8B\u70ED\u70B9',tip:'\uD83D\uDCCC \u5F00\u53E3\u8BF4\u6BD4\u5199\u5728\u7EB8\u4E0A\u66F4\u91CD\u8981'},
+  ];
+  var borderColors=['#3b82f6','#10b981','#f59e0b','#ec4899'];
+  var html='<h3 style="font-size:16px;margin-bottom:10px;">\uD83D\uDDD3 \u5907\u8003\u65F6\u95F4\u89C4\u5212</h3>';
+  html+='<div class="plan-grid">';
+  plans.forEach(function(p,i){
+    var isActive=i===phaseIdx;
+    html+='<div class="plan-card '+(isActive?'active-phase':'')+'" style="border-left-color:'+borderColors[i]+'">';
+    html+='<div class="p-title">'+p.t+' '+(isActive?'<span class="p-badge">\uD83D\uDCCD \u5F53\u524D\u9636\u6BB5</span>':'')+'</div>';
+    html+='<div class="p-time">'+p.time+'</div><div class="p-desc">'+p.d+'</div><div class="p-tip">'+p.tip+'</div></div>';
+  });
+  html+='</div>';
+  return html;
+}
+
+// ===== JOB =====
+function renderJobSection(){
+  var html='<h3 style="font-size:16px;margin-top:16px;margin-bottom:10px;">\uD83C\uDFAF \u667A\u80FD\u5C97\u4F4D\u63A8\u8350</h3>';
+  html+='<div class="job-form"><select id="j-degree"><option value="">\u5B66\u5386</option><option>\u4E13\u79D1\u53CA\u4EE5\u4E0A</option><option>\u672C\u79D1\u53CA\u4EE5\u4E0A</option><option>\u7855\u58EB\u53CA\u4EE5\u4E0A</option></select><select id="j-fresh"><option value="">\u662F\u5426\u5E94\u5C4A</option><option>\u5E94\u5C4A\u53EF\u62A5</option><option>\u4E0D\u9650</option></select><input id="j-major" placeholder="\u4E13\u4E1A\u5173\u952E\u8BCD" style="flex:1;min-width:100px;"><button onclick="filterJobs()">\u7B5B\u9009</button></div>';
+  html+='<div class="job-grid" id="job-results"></div>';
+  setTimeout(filterJobs,60);
+  return html;
+}
+function filterJobs(){
+  var d=document.getElementById('j-degree')?document.getElementById('j-degree').value:'';
+  var f=document.getElementById('j-fresh')?document.getElementById('j-fresh').value:'';
+  var m=document.getElementById('j-major')?document.getElementById('j-major').value.toLowerCase():'';
+  var jobs=sampleJobs.slice();
+  if(d) jobs=jobs.filter(function(j){return j.tags.some(function(t){return t.indexOf(d)>=0;});});
+  if(f) jobs=jobs.filter(function(j){return j.tags.some(function(t){return t.indexOf(f)>=0;});});
+  if(m) jobs=jobs.filter(function(j){return j.tags.some(function(t){return t.toLowerCase().indexOf(m)>=0;});});
+  var grid=document.getElementById('job-results'); if(!grid) return;
+  if(jobs.length===0){ grid.innerHTML='<p class="empty">\u6CA1\u6709\u5B8C\u5168\u5339\u914D\u7684\u5C97\u4F4D\uFF0C\u8BF7\u653E\u5BBD\u7B5B\u9009\u6761\u4EF6</p>'; return; }
+  grid.innerHTML=jobs.map(function(j){return '<div class="job-card"><div class="j-title">'+j.t+'</div><div class="j-info">'+j.info+'</div><div class="j-tags">'+j.tags.map(function(t){return '<span class="j-tag">'+t+'</span>';}).join('')+'</div></div>';}).join('');
+}
+
+// ===== INTERVIEW - 热点剖析（从 hot_topics.json 加载） =====
+var interviewHotTopics = [];
+var interviewLastUpdate = '';
+var interviewLoadError = false;
+var catColors = {'政治':'#3b82f6','经济':'#10b981','社会':'#8b5cf6','科技':'#6366f1','生态':'#059669','教育':'#f59e0b','文化':'#ec4899','民生':'#ef4444'};
+
+function loadHotTopics(){
+  interviewHotTopics = [];
+  interviewLastUpdate = '';
+  interviewLoadError = false;
+
+  try {
+    if(typeof HOT_TOPICS_DATA !== 'undefined' && HOT_TOPICS_DATA && HOT_TOPICS_DATA.topics && HOT_TOPICS_DATA.topics.length > 0){
+      interviewHotTopics = HOT_TOPICS_DATA.topics;
+      interviewLastUpdate = HOT_TOPICS_DATA.lastUpdate || '';
+      console.log('热点数据加载成功: '+interviewHotTopics.length+' 个话题, 更新日期 '+interviewLastUpdate);
+    } else {
+      throw new Error('hot_topics.js 数据无效');
+    }
+  } catch(err){
+    console.warn('热点数据加载失败，使用内嵌数据: '+err.message);
+    interviewLoadError = true;
+    fallbackHotTopics();
+  }
+  renderAll();
+}
+// ===== 内嵌热点数据（离线 fallback） =====
+function fallbackHotTopics(){
+  interviewHotTopics = [
+  {t:'2026世界人工智能大会',cat:'科技',src:'新华社/学习强国 7月17日',
+   article:'7月17日，习近平主席在上海出席2026世界人工智能大会暨人工智能全球治理高级别会议开幕式，发表题为《携手构建公正合理的全球人工智能治理体系》的主旨讲话。习主席提出四点意见：坚持开放共赢驱动创新发展、强化风险意识确保安全可控、鼓励包容并蓄促进文明互鉴、倡导和衷共济完善全球治理。开幕式上，29个国家代表签署协定，世界人工智能合作组织正式成立。',
+   commentary:'AI全球治理是面试必考热点。答题框架：时代背景（AI进入"前所未有的活跃期"）→中国理念（"以人为本、向上向善"）→四点意见的具体内涵→中国行动（世界人工智能合作组织、培训名额、"妈祖"方案）。金句："单弦不成音，独木不成林"；"明者因时而变，知者随事而制"。体现"人类命运共同体"理念。'},
+  {t:'庆祝中国共产党成立105周年',cat:'政治',src:'求是杂志/新华社 7月15日',
+   article:'7月1日，庆祝中国共产党成立105周年大会在北京举行。7月16日出版的《求是》杂志刊发习近平总书记重要讲话。讲话系统阐述了党的五大优秀特质：勇担历史使命始终掌握战略主动、顺应发展潮流始终走在时代前列、敢于善于斗争始终保持必胜信心、注重强健自身始终充满生机活力、坚定人民立场始终不忘初心使命。求是网评论员文章《信心在当下，更在未来》指出：百余年中华大地翻天覆地的历史巨变，让中国人民生发出由衷的自豪，坚信中国过去能、今后也一定能。',
+   commentary:'"中国共产党为什么能"是面试政治类必考题。五大优秀特质可直接用于回答"党的先进性""党的领导优势"等题目。关键表述：从50多名党员到世界第一大执政党；"打铁必须自身硬"；自我革命精神。答题时结合百余年历程中的具体事例，展现历史纵深。'},
+  {t:'上半年中国经济"稳韧新优"',cat:'经济',src:'国家统计局/人民日报 7月15日',
+   article:'7月15日，国家统计局发布2026年上半年经济数据：GDP 695704亿元，同比增长4.7%，运行在"4.5%-5%"目标区间内。高技术制造业增加值增长13.3%，3D打印设备、锂离子电池、工业机器人产量分别增长48.5%、39.3%、28%。夏粮产量3014.9亿斤，首破3000亿斤。城镇调查失业率均值5.2%，CPI温和上涨1.0%，外汇储备稳定在3.4万亿美元以上。IMF上调中国全年增长预期0.2个百分点。新动能对经济增长贡献率超40%，单位GDP能耗下降1.9%。国家统计局副局长用四个字评价：稳、韧、新、优。',
+   commentary:'经济类面试题的数据"弹药库"。答题可用"稳、韧、新、优"四字框架：增长底盘稳、抗风险韧性强、新动能加速壮大、经济结构持续优化。关键数据：GDP 4.7%、高技术制造13.3%、夏粮3000亿斤首破、失业率5.2%、CPI 1%。体现"中国经济长期向好的基本面没有改变"的核心论断。'},
+  {t:'总书记对基础教育工作作出重要指示',cat:'教育',src:'新华社/央视 7月22日',
+   article:'7月22日，全国基础教育工作会议在京召开。习近平总书记作出重要指示强调：要全面贯彻党的教育方针，落实立德树人根本任务，落实健康第一教育理念，坚持五育并举、五育融合，推进基础教育扩优提质，牢牢守住教育公平底线。丁薛祥副总理出席讲话，强调要摒弃"重分数、轻健康"的不良倾向，适应人口变化优化教育资源配置，弘扬教育家精神。会议强调加强中小学生体育、美育、劳动教育和心理健康教育，从"有学上"向"上好学"跨越。',
+   commentary:'教育公平是申论和面试经典话题。答题关键词：立德树人根本任务、健康第一理念、教育公平底线、五育并举融合。框架：理念转变（从"分数第一"到"健康第一"）→公平推进（缩小城乡区域差距、扩优提质）→教师队伍（教育家精神、待遇保障）。金句："扣好人生第一粒扣子"；"身上有汗、眼里有光"。'},
+  {t:'习近平同巴西总统卢拉通电话',cat:'政治',src:'新华社/学习强国 7月27日',
+   article:'7月27日，习近平主席应约同巴西总统卢拉通电话。习近平指出中巴命运共同体建设取得积极进展，强调中国和巴西作为全球南方重要成员，应携手推动"大金砖合作"高质量发展，谱写全球南方团结自强新篇章。卢拉高度赞赏习主席在世界人工智能大会上提出的AI全球治理理念，表示巴中贸易额再创新高，期待加强AI、能源矿产等领域合作。',
+   commentary:'大国外交类面试素材。关键词：全球南方、大金砖合作、命运共同体、多边主义。答题时可用"南南合作"框架，结合金砖国家扩员、中巴经贸数据等体现"团结自强"主题。习主席表述："坚定站在历史正确和文明进步一边"。'},
+  {t:'新就业形态职业伤害保障试点全国推开',cat:'民生',src:'人社部/人民日报 7月1日',
+   article:'7月1日起，新就业形态人员职业伤害保障试点在全国31省份全面推开。采取"按日参保、按单计费、月度缴费、总参总保"方式，个人不缴费，平台企业承担。试点自2022年启动，截至6月底累计参保2990.2万人，覆盖出行、即时配送、同城货运三个行业。新增纳入T3出行、花小猪、美团打车、小象超市、盒马鲜生等平台。被认定为职业伤害的，医疗费、伤残补助金等从工伤保险基金列支，还可享受平台提供的生活保障费。',
+   commentary:'新就业形态劳动者权益保障是面试好话题。答题框架：背景（平台经济规模大、灵活就业人口多）→问题（缺乏传统劳动关系、保障空白）→创新（按单计费、个人不缴费、全国推开）→意义（兜底保障、促进平台经济健康发展）。数字说话：2990.2万参保人。"让灵活就业者也有安全感"是加分表述。'},
+  {t:'夏粮首破3000亿斤背后的农业新质生产力',cat:'经济',src:'人民日报/央视 7月10日',
+   article:'今年全国夏粮产量3014.9亿斤，首次突破3000亿斤，比上年增长0.7%。值得关注的是，这一成绩是在"困难模式"下取得的——去年黄淮海地区连阴雨导致冬小麦晚播比例高达44.2%，麦收期间又遭遇强降水。主产区推行"以种补晚、以密补晚、以肥补晚、以好补晚、促苗转壮"的"四补一促"稳产路径，环环紧扣从"龙口夺粮"。背后是品种创新与技术集成的双轮驱动——郑麦1860等品种百亩方亩产超840公斤，5G和AI技术实现精准监测，大田生产从"依靠经验"走向"基于数据"。',
+   commentary:'粮食安全+农业新质生产力——双热点叠加。答题框架：成绩（3000亿斤首破）→挑战（极端天气、资源约束）→对策（种业振兴、高标准农田、科技赋能）。"中国饭碗端得稳，靠的不是运气，而是不断锤炼穿越风雨的能力"——人民时评原句，答题直接用。'},
+  {t:'民营经济促进法典型案例发布',cat:'经济',src:'发改委/最高检 7月22-24日',
+   article:'7月22日，国家发改委、最高检联合发布10件贯彻实施民营经济促进法典型案例；7月24日，发改委、最高法又联合发布第一批8件典型案例。案例涵盖职务侵占打击、超范围冻结财产纠正、行政"过罚不当"监督、直播带货合同诈骗惩治、转圈贸易骗局等，体现"法治是最好的营商环境"。典型案例中，一企业因叉车未经检验被罚8万，检察机关认定"过罚不当"后改罚2万；直播带货以"保底销量"为名骗取337家商户保证金2600余万元，主犯获刑超十年。',
+   commentary:'营商环境+法治建设经典考题。关键论断："法治是最好的营商环境"；"两个毫不动摇"；民营经济"56789"贡献。具体案例体现三个维度：刑事保护（打击内部腐败和诈骗）、民事监督（纠正超范围查封）、行政监督（过罚相当原则）。答题时用案例说话比空谈政策更有说服力。'},
+  {t:'重庆彭水山体崩塌抢险救援',cat:'社会',src:'人民日报/央视 7月17日',
+   article:'7月17日9时许，重庆彭水县汉葭街道发生大型山体崩塌，10余栋民房被掩埋。值得关注的是，灾害发生前网格员巡查时发现山体落石和前兆，通过"村村响"广播和居民群发布预警，成功转移1100余名群众，其中核心区60余人提前撤离，有效规避了更大伤亡。救援投入872人、千余台装备，习近平作出重要指示要求全力搜救。会议强调"四个宁可"理念：宁可十防九空不可万一失防、宁可备而不用不可用而无备、宁可听骂声不可听哭声、宁可自己辛苦不可群众受苦。',
+   commentary:'应急管理+基层治理的经典案例。答题亮点在"网格员预警"：从一个人发现前兆到千余人安全转移，体现了基层治理"神经末梢"的关键作用。"四个宁可"是体现人民至上理念的绝佳金句。三级包保责任（区县包镇街、镇街包村社、村社包网格）可用在回答基层治理类题目中。'},
+  {t:'"十五五"开局之年·新动能挑大梁',cat:'经济',src:'中国青年报/经济日报 7月21日',
+   article:'2026年是"十五五"规划开局之年。上半年数据显示新动能"日益挑大梁"：高技术制造业增长13.3%、数字产品制造业增长12.3%、装备制造业增长9.3%，共贡献工业增量近五成。服务业增长5.2%，信息软件技术服务业增长10.7%。外贸表现强劲——进出口总额25.5万亿元，增长16.9%。世界银行在《中国经济简报》中表示中国上半年经济保持韧性。IMF逆势上调中国预期，下调全球预期至3.0%。陕西至安徽特高压工程投运、海洋二号E星发射成功、钙钛矿光伏电池取得突破。',
+   commentary:'宏观经济+新质生产力的绝佳素材。可用"全球看中国"的对比视角：IMF下调全球预期却上调中国预期——中国成为动荡局势中的"稳定锚"。三大亮点：制造业高端化、服务业现代化、外贸韧性化。"十五五"开局之年的战略意义可结合规划纲要展开。'},
+  {t:'"让技术永远成为人的工具"',cat:'科技',src:'求是网 7月20日',
+   article:'求是网发表评论《让技术永远成为人的工具》，提出关键命题：当AI预测能力日益精进，人会否放弃自主判断？当机器生成的文本图像足以以假乱真，真实与虚构如何甄别？文章引用马克思观点——"机器是人的本质力量的对象化，是延伸人的能力、解放人的劳动的工具，不应异化为主宰人的力量"。警示"参数成为描述成长的唯一语言、用户画像取代对他人复杂性的体认"的主体性消解风险。强调技术必须服务于人而非屈从于技术。',
+   commentary:'AI伦理与人的主体性——面试中的深度话题。可结合世界人工智能大会上习近平四点意见中的"强化风险意识确保安全可控"。框架：技术价值（赋能千行百业）→伦理风险（算法偏见、深度伪造、就业替代）→治理路径（法律+伦理+技术监测+国际协作）。金句："确保人工智能始终处于人类控制之下"；"技术向善"。'},
+  {t:'中泰命运共同体联合声明',cat:'政治',src:'新华社 7月20日',
+   article:'7月20日，《中华人民共和国政府和泰王国政府关于面向繁荣中泰命运共同体的联合声明》发布。习近平会见泰国总理阿努廷，强调中国支持泰国新一届政府有效施政。中泰双方在互联互通、数字经济、新能源汽车、旅游人文等领域达成广泛合作共识。泰国总理高度评价习主席在人工智能大会上提出的治理理念。中泰建交50周年系列庆祝活动持续推进。',
+   commentary:'周边外交+命运共同体的经典案例。可用于回答"中国特色大国外交""亲诚惠容"等题目。关键词：中泰一家亲、命运共同体、共商共建共享。答题时突出中国"亲诚惠容"周边外交理念。'},
+  {t:'国产工业软件与科技自立自强',cat:'科技',src:'人民网/科技日报 7月13日',
+   article:'7月13日人民网报道《国产工业软件跑出加速度》：CAD/CAE/EDA等关键工业软件国产替代加速推进；国家超算互联网核心节点上线运行；长征五号遥十四火箭安全运抵文昌航天发射场；"中国智造"成为中国式现代化的亮丽名片。上半年高技术领域投资热度持续攀升，国家重点实验室体系重组加快推进，科技创新举国体制优势进一步显现。',
+   commentary:'科技自立自强+新质生产力经典素材。答题框架：为什么要自立（"卡脖子"困境）→怎么做（举国体制+市场机制+人才战略）→具体成果（工业软件、人工智能、航天）。可与"十五五"规划中科技强国建设目标结合。'},
+  {t:'美伊多哈会谈与中东局势',cat:'政治',src:'新华社/央视 7月1日',
+   article:'7月1日，美国和伊朗在卡塔尔首都多哈举行间接会谈，原预期的面对面谈判"降格"为间接会谈。会谈后双方均称进展顺利，但专家认为此举凸显美伊互信薄弱和认知"错位"。中东地缘冲突持续影响全球能源供应，上半年中国国内能源生产创历史同期新高，展现强大韧性。',
+   commentary:'国际形势类素材。可用于回答"中国在国际事务中的角色""全球治理"等题目。关键视角：中国始终主张通过对话协商解决热点问题，反对强权政治和单边制裁。可对比中国在中东问题上的建设性角色。'},
+  {t:'防汛救灾与"四个宁可"理念',cat:'社会',src:'应急管理部/央广 7月28日',
+   article:'央广网7月28日发表评论《锤炼穿越风雨的能力》，指出当前正值"七下八上"防汛关键期，全国地质灾害防控形势严峻，大概率出现南北同步发生灾情。彭水山崩后，自然资源部派出270名专家下沉各地拉网式排查。强调"三个宁可"升级为"四个宁可"理念，新增"宁可自己辛苦不可群众受苦"。湖北小龙虾新品种"潜江龙虾1号"通过国家级审定、暴雨强对流双预警齐发等新闻也从侧面展现了科技创新与风险防控并进态势。',
+   commentary:'应急管理+基层治理。答题框架：预警机制（网格员、卫星遥感）→应急响应（分级响应、联合作战）→灾后恢复（基础设施、群众安置）。"四个宁可"理念体现以人民为中心，是绝佳的面试金句。可与"枫桥经验"等基层治理素材联动使用。"一级抓一级、层层抓落实"的责任链条是制度优势的体现。'},
+  {t:'上半年就业形势与"十五五"就业规划',cat:'民生',src:'人社部/新华社 7月',
+   article:'上半年全国城镇新增就业695万人，城镇调查失业率5.2%，符合5.5%以内目标。高校毕业生规模再创新高，结构性矛盾突出——"有人没活干"和"有活没人干"并存。《实施就业优先战略"十五五"规划》部署加强产业和就业协同，稳岗扩容提质行动正在全国实施。12个新职业向社会公示，12个新职业涵盖AI训练师、碳排放管理员、研学旅行指导师等方向。失业保险打出稳就业"组合拳"，人社部推进"人工智能+人社"应用发展。',
+   commentary:'就业民生类面试高频话题。答题思路：数据说成绩（新增695万、失业率5.2%）→直面问题（结构性矛盾、毕业生规模）→政策应对（稳岗扩容、新职业开发、AI+就业）。不要只谈"就业难"的焦虑情绪，要展现政策工具箱的厚度。"就业是最大的民生工程、民心工程、根基工程"。'},
+  ];
+  interviewLastUpdate = '2026-07-29';
+  console.log('已加载内嵌热点数据: '+interviewHotTopics.length+' 个话题');
+}
+
+function renderInterviewSection(){
+  var html='';
+  var statusColor=interviewLoadError?'var(--warn)':'var(--ok)';
+  var statusIcon=interviewLoadError?'\u26a0\ufe0f':'\u2705';
+  var statusText=interviewLoadError?'\u4f7f\u7528\u79bb\u7ebf\u6570\u636e':(interviewHotTopics.length>0?'\u5df2\u52a0\u8f7d '+interviewHotTopics.length+' \u4e2a\u8bdd\u9898':'\u52a0\u8f7d\u4e2d\u2026');
+  html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">';
+  html+='<span style="font-size:12px;color:var(--text2);">\u6570\u636e\u6765\u6e90\uff1a\u6c42\u662f \u00b7 \u4eba\u6c11\u7f51 \u00b7 \u65b0\u534e\u793e \u00b7 \u5b66\u4e60\u5f3a\u56fd \u00b7 \u592e\u89c6 \u00b7 \u7edf\u8ba1\u5c40</span>';
+  html+='<span style="font-size:11px;color:'+statusColor+';font-weight:600;">'+statusIcon+' '+statusText+'</span>';
+  html+='<span style="font-size:11px;color:var(--text3);">\u66f4\u65b0\uff1a'+(interviewLastUpdate||'--')+'</span>';
+  html+='<button onclick="refreshHotTopics()" style="margin-left:auto;font-size:11px;padding:4px 12px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--pri);cursor:pointer;font-weight:600;">\uD83D\uDD04 \u5237\u65b0\u70ed\u70b9</button>';
+  html+='</div>';
+  html+='<p style="font-size:12px;color:var(--text3);margin-bottom:12px;">\u5b9e\u65f6\u8ffd\u8e2a\u5b98\u65b9\u5a92\u4f53\u6700\u65b0\u65f6\u653f\u70ed\u70b9 \u00b7 \u70b9\u51fb\u5361\u7247\u5c55\u5f00\u9605\u8bfb\u5b8c\u6574\u6587\u7ae0\u4e0e\u9762\u8bd5\u7b54\u9898\u6846\u67b6</p>';
+  html+='<div class="interview-grid">';
+  interviewHotTopics.forEach(function(c,i){
+    html+='<div class="hot-card" id="hot-'+i+'" onclick="toggleHotCard('+i+')">';
+    html+='<div class="hot-meta"><span class="hot-cat" style="background:'+(catColors[c.cat]||'#94a3b8')+';">'+c.cat+'</span><span class="hot-src">'+c.src+'</span></div>';
+    html+='<div class="hot-title">'+c.t+'</div>';
+    var summary=c.article?c.article.substring(0,80)+'\u2026':''; html+='<div class="hot-summary">'+summary+'</div>';
+    html+='<div class="hot-expand"><span class="chevron">&#x25BE;</span> \u5c55\u5f00\u9605\u8bfb\u5168\u6587</div>';
+    html+='<div class="hot-full">';
+    html+='<div class="hot-article">'+c.article+'</div>';
+    html+='<div class="hot-commentary"><div class="hot-commentary-tag">&#x1F4AC; \u9762\u8bd5\u8bc4\u8bba\u5206\u6790</div><div class="hot-commentary-body">'+c.commentary+'</div></div>';
+    html+='</div></div>';
+  });
+  html+='</div>';
+  html+='<div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;">';
+  [{n:'\u641c\u72d7\u5fae\u4fe1\u641c\u7d22',u:'https://weixin.sogou.com/'},{n:'\u4eba\u6c11\u65e5\u62a5',u:'https://search.bilibili.com/all?keyword='+encodeURIComponent('\u4eba\u6c11\u65e5\u62a5 \u65f6\u653f')},{n:'\u5b66\u4e60\u5f3a\u56fd',u:'https://search.bilibili.com/all?keyword='+encodeURIComponent('\u5b66\u4e60\u5f3a\u56fd \u65f6\u653f\u8981\u95fb')},{n:'\u534a\u6708\u8c08',u:'https://search.bilibili.com/all?keyword='+encodeURIComponent('\u534a\u6708\u8c08 \u7533\u8bba\u9762\u8bd5')}].forEach(function(lk){html+='<a href="'+lk.u+'" target="_blank" style="font-size:11px;color:var(--pri);text-decoration:none;padding:5px 12px;background:var(--pri2);border-radius:20px;font-weight:600;">'+lk.n+' \u2197</a>';});
+  html+='</div>';
+  html+='<div style="margin-top:14px;"><div class="review-field"><label>\uD83D\uDCDD \u70ed\u70b9\u5256\u6790\u7b14\u8bb0</label><textarea id="interview-notes" onchange="saveInterviewNotes()" style="width:100%;min-height:80px;" placeholder="\u8bb0\u5f55\u70ed\u70b9\u5206\u6790\u5fc3\u5f97\u548c\u7b54\u9898\u601d\u8def...">'+(state.interview.notes||'')+'</textarea></div></div>';
+  return html;
+}
+function refreshHotTopics(){
+  location.reload();
+}
+function toggleHotCard(i){
+  var card=document.getElementById('hot-'+i); if(!card) return;
+  card.classList.toggle('expanded');
+}
+function saveInterviewNotes(){ state.interview.notes=document.getElementById('interview-notes')?document.getElementById('interview-notes').value:''; saveState(); }
+
+// ===== EXERCISE =====
+function renderExerciseSection(){
+  var today=T(); var items=state.exercise[today]||[];
+  var html='';
+  if(items.length===0) html+='<p class="empty">\u4ECA\u5929\u8FD8\u6CA1\u6709\u8FD0\u52A8\u8BB0\u5F55</p>';
+  else items.forEach(function(e,i){html+='<div class="record-item">'+(e.type||'--')+' \u00B7 '+(e.duration||0)+'\u5206\u949F \u00B7 '+(e.note||'')+' <button class="btn-del" onclick="exerciseDelete('+i+')">\u2715</button></div>';});
+  html+='<div class="record-adder"><select id="ex-type"><option>\u8DD1\u6B65</option><option>\u5065\u8EAB</option><option>\u6E38\u6CF3</option><option>\u9A91\u884C</option><option>\u7491\u4F3D</option><option>\u7BEE\u7403</option><option>\u6563\u6B65</option><option>\u5176\u4ED6</option></select><input id="ex-dur" placeholder="\u65F6\u957F(\u5206\u949F)" style="width:90px;"><input id="ex-note" placeholder="\u5907\u6CE8" style="flex:1;min-width:100px;"><button onclick="exerciseAdd()">\u8BB0\u5F55</button></div>';
+  return html;
+}
+function exerciseAdd(){ var type=document.getElementById('ex-type')?document.getElementById('ex-type').value:'\u8DD1\u6B65'; var dur=document.getElementById('ex-dur')?document.getElementById('ex-dur').value:''; var note=document.getElementById('ex-note')?document.getElementById('ex-note').value:''; if(!dur||parseInt(dur)<=0) return; var today=T();state.exercise[today]=state.exercise[today]||[]; state.exercise[today].push({id:genId(),type:type,duration:parseInt(dur),note:note}); saveState();renderAll(); }
+function exerciseDelete(idx){ var today=T();if(!state.exercise[today]) return; state.exercise[today].splice(idx,1);saveState();renderAll(); }
+
+// ===== DIET (with kcal and history) =====
+function renderDietSection(dietDate,isToday){
+  var items=state.diet[dietDate]||[];
+  var kcalTotal=items.reduce(function(s,d){return s+(parseInt(d.kcal)||0);},0);
+  var html='';
+  // Date navigation
+  html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;font-weight:600;">';
+  html+='<button onclick="dietNav(-1)" style="border:1px solid var(--border);border-radius:var(--r2);background:var(--card);cursor:pointer;padding:4px 10px;font-size:14px;color:var(--text2);">\u25C0</button>';
+  html+='<span style="color:var(--text);">'+(isToday?'\uD83D\uDCC5 \u4ECA\u65E5 ('+dietDate+')':'\uD83D\uDCC5 '+dietDate)+'</span>';
+  if(!isToday) html+='<button onclick="dietNavToToday()" style="font-size:11px;color:var(--pri);background:var(--pri2);border:none;cursor:pointer;padding:3px 10px;border-radius:10px;font-weight:600;">\u56DE\u5230\u4ECA\u5929</button>';
+  html+='<button onclick="dietNav(1)" style="border:1px solid var(--border);border-radius:var(--r2);background:var(--card);cursor:pointer;padding:4px 10px;font-size:14px;color:var(--text2);" '+(isToday?'disabled style="opacity:0.3;cursor:default"':'')+'>\u25B6</button></div>';
+  // Records
+  if(items.length===0) html+='<p class="empty">'+(isToday?'\u4ECA\u5929\u8FD8\u6CA1\u6709\u996E\u98DF\u8BB0\u5F55':'\u8BE5\u65E5\u65E0\u996E\u98DF\u8BB0\u5F55')+'</p>';
+  else {
+    html+='<div style="margin-bottom:8px;padding:8px 14px;background:#fffbeb;border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--warn);">\uD83D\uDD25 \u5F53\u65E5\u603B\u6444\u5165\uFF1A<b style="font-size:16px;">'+kcalTotal+'</b> kcal \u00B7 '+items.length+'\u9910</div>';
+    items.forEach(function(d,i){
+      html+='<div class="record-item"><span style="font-size:12px;font-weight:600;color:var(--text);background:var(--border);border-radius:4px;padding:1px 8px;flex-shrink:0;">'+d.meal+'</span> <span style="flex:1;">'+d.content+'</span> <span style="color:var(--warn);font-weight:600;margin-left:auto;">'+(d.kcal||0)+' kcal</span> '+(isToday?'<button class="btn-del" onclick="dietDelete('+i+')">\u2715</button>':'')+'</div>';
+    });
+  }
+  // Add form (only for today)
+  if(isToday){
+    html+='<div class="record-adder"><select id="dt-meal"><option>\u65E9\u9910</option><option>\u5348\u9910</option><option>\u665A\u9910</option><option>\u52A0\u9910</option></select><input id="dt-content" placeholder="\u5403\u4E86\u4EC0\u4E48..." style="flex:1;min-width:100px;"><input id="dt-kcal" placeholder="\u5361\u8DEF\u91CC(kcal)" style="width:90px;" type="number" onkeydown="if(event.key===\'Enter\')dietAdd()"><button onclick="dietAdd()">\u8BB0\u5F55</button></div>';
+  }
+  return html;
+}
+function dietNav(dir){
+  var cur=state.dietViewDate||T();
+  var d=new Date(cur); d.setDate(d.getDate()+dir);
+  var newDate=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  if(dir>0&&newDate>T()) return; // Don't go to future
+  state.dietViewDate=newDate; saveState();renderAll();
+}
+function dietNavToToday(){ state.dietViewDate=''; saveState();renderAll(); }
+function dietAdd(){ var meal=document.getElementById('dt-meal')?document.getElementById('dt-meal').value:'\u65E9\u9910'; var content=document.getElementById('dt-content')?document.getElementById('dt-content').value.trim():''; var kcalEl=document.getElementById('dt-kcal'); var kcal=kcalEl?parseInt(kcalEl.value)||0:0; if(!content) return; var date=state.dietViewDate||T();state.diet[date]=state.diet[date]||[]; state.diet[date].push({id:genId(),meal:meal,content:content,kcal:kcal}); saveState();renderAll(); }
+function dietDelete(idx){ var date=state.dietViewDate||T();if(!state.diet[date]) return; state.diet[date].splice(idx,1);saveState();renderAll(); }
+
+// ===== REVIEW =====
+function reviewRate(r){ var today=T();state.review[today]=state.review[today]||{};state.review[today].rating=r; saveState();renderAll(); }
+function reviewSave(){
+  var today=T();state.review[today]=state.review[today]||{};
+  state.review[today].gain=document.getElementById('rev-gain')?document.getElementById('rev-gain').value:'';
+  state.review[today].weakness=document.getElementById('rev-weak')?document.getElementById('rev-weak').value:'';
+  state.review[today].plan=document.getElementById('rev-plan')?document.getElementById('rev-plan').value:'';
+  saveState();
+}
+
+// ===== TODO OPS =====
+function todoAdd(){
+  var inp=document.getElementById('todo-input'); if(!inp) return;
+  var text=inp.value.trim(); if(!text) return;
+  var modSel=document.getElementById('todo-mod');
+  var moduleId=modSel?modSel.value:'';
+  var today=T();state.todos[today]=state.todos[today]||[];
+  state.todos[today].push({id:genId(),text:text,done:false,sessions:[],status:'pending',moduleId:moduleId||''});
+  inp.value=''; saveState();renderAll();
+}
+function todoToggle(todoId){
+  var today=T();var todos=state.todos[today]||[]; var td=todos.find(function(t){return t.id===todoId;}); if(!td) return;
+  td.done=!td.done; td.status=td.done?'completed':'pending';
+  if(td.done){ td.completedAt=Date.now(); if(state.activeTimer&&state.activeTimer.taskId===todoId&&state.activeTimer.type==='todo'){ stopTimer(true); } }
+  updateStreak(); saveState();renderAll();
+}
+function todoStartTimer(todoId){
+  stopTimer(true); var today=T();var todos=state.todos[today]||[]; var td=todos.find(function(t){return t.id===todoId;}); if(!td) return;
+  if(td.done) td.done=false; td.status='active';
+  state.activeTimer={taskId:todoId,type:'todo',startTime:Date.now(),date:today};
+  timerInterval=setInterval(updateTimerUI,1000); saveState();renderAll();
+}
+function todoStopTimer(){
+  var at=state.activeTimer; if(!at||at.type!=='todo') return;
+  var todos=state.todos[at.date]||[]; var td=todos.find(function(t){return t.id===at.taskId;});
+  if(td){ var end=Date.now(); if(end-at.startTime>1000){td.sessions.push({start:at.startTime,end:end});} if(td.status==='active') td.status='pending'; }
+  state.activeTimer=null; if(timerInterval){clearInterval(timerInterval);timerInterval=null;} saveState();renderAll();
+}
+function todoDelete(todoId){
+  if(state.activeTimer&&state.activeTimer.taskId===todoId&&state.activeTimer.type==='todo'){ stopTimer(true); }
+  var today=T();var todos=state.todos[today]||[]; var idx=todos.findIndex(function(t){return t.id===todoId;}); if(idx<0) return; todos.splice(idx,1); saveState();renderAll();
+}
+
+// ===== COUNTDOWN EDIT =====
+function toggleCountdownEdit(){
+  var el=document.getElementById('cdown-edit'); if(!el) return;
+  el.classList.toggle('show');
+  if(el.classList.contains('show')){
+    document.getElementById('ce-name').value=state.countdown.name||'';
+    document.getElementById('ce-date').value=state.countdown.date||'';
+    document.getElementById('ce-name').focus();
+  }
+}
+function saveCountdown(){
+  var nm=document.getElementById('ce-name'); var dt=document.getElementById('ce-date');
+  if(!nm||!dt) return;
+  var name=nm.value.trim(); var date=dt.value;
+  if(!name||!date){ alert('\u8BF7\u586B\u5199\u5B8C\u6574\u7684\u8003\u8BD5\u540D\u79F0\u548C\u65E5\u671F'); return; }
+  state.countdown.name=name; state.countdown.date=date;
+  saveState(); toggleCountdownEdit(); renderAll();
+}
+function toggleTeaching(){ state.teachingActive=!state.teachingActive; saveState();renderAll(); }
+
+// ===== TIMER =====
+function stopTimer(silent){
+  var at=state.activeTimer; if(!at) return;
+  if(at.type==='todo'){ todoStopTimer(); }
+  if(!silent) renderAll();
+}
+function completeActiveTimer(){
+  var at=state.activeTimer; if(!at) return;
+  if(at.type==='todo'){ todoStopTimer(); var todos=state.todos[at.date]||[]; var td=todos.find(function(t){return t.id===at.taskId;}); if(td){td.done=true;td.status='completed';td.completedAt=Date.now();} updateStreak(); saveState();renderAll(); }
+}
+function updateTimerUI(){
+  var bar=document.getElementById('timer-bar'), disp=document.getElementById('t-display'), name=document.getElementById('t-name');
+  var at=state.activeTimer; if(!bar||!disp||!name) return;
+  if(!at){ bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  var taskName='--',sessionMs=0;
+  if(at.type==='todo'){ var todos=state.todos[at.date]||[]; var td=todos.find(function(t){return t.id===at.taskId;}); taskName='\u2611 '+(td?td.text:'--'); sessionMs=td?taskMs(td):0; }
+  var totalMs=sessionMs+(Date.now()-at.startTime); disp.textContent=fmtHH(Math.floor(totalMs/1000)); name.textContent=taskName;
+}
+
+// ===== STREAK =====
+function updateStreak(){
+  var today=T(); var totalMs=todayStudyMs();
+  if(totalMs>0){
+    var yest=new Date();yest.setDate(yest.getDate()-1);
+    var yk=yest.getFullYear()+'-'+String(yest.getMonth()+1).padStart(2,'0')+'-'+String(yest.getDate()).padStart(2,'0');
+    var yTodos=state.todos[yk]||[]; var yMs=0; yTodos.forEach(function(td){yMs+=taskMs(td);});
+    state.streak=state.streak||0;
+    if(state.lastActiveDate!==today){
+      if(state.lastActiveDate===yk&&yMs>0) state.streak++;
+      else if(totalMs>0) state.streak=1;
+      state.lastActiveDate=today;
+    }
+    if(state.streak<1) state.streak=1;
+  }
+}
+
+// ===== INIT =====
+function init(){ loadState(); state.activeTimer=null; if(timerInterval){clearInterval(timerInterval);timerInterval=null;} fallbackHotTopics(); loadHotTopics(); }
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
