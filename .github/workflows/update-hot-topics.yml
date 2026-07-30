@@ -1,0 +1,62 @@
+name: 每日更新考公面试热点
+
+on:
+  schedule:
+    # 北京时间每天早上 8:00 (UTC 0:00)
+    - cron: '0 0 * * *'
+  workflow_dispatch:  # 允许手动触发
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: 安装依赖
+        run: pip install requests beautifulsoup4
+      
+      - name: 抓取官方媒体热点
+        run: python scripts/fetch_hot_topics.py
+      
+      - name: 生成 hot_topics.js
+        run: |
+          echo "var HOT_TOPICS_DATA = $(cat hot_topics.json);" > hot_topics.js
+      
+      - name: 提交更新
+        run: |
+          git config user.name "Hot Topics Bot"
+          git config user.email "bot@hot-topics.local"
+          git add hot_topics.json hot_topics.js
+          if ! git diff --cached --quiet; then
+            git commit -m "每日更新热点 $(date +%Y-%m-%d)"
+            git push
+          else
+            echo "数据无变化，跳过提交"
+          fi
+      
+      - name: 配置 Pages
+        uses: actions/configure-pages@v4
+      
+      - name: 上传 Pages 文件
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
