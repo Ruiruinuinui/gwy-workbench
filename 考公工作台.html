@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>考公工作台 · 小布伴学</title>
+<title>鑰冨叕宸ヤ綔鍙?路 灏忓竷浼村</title>
 <script src="hot_topics.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -195,6 +195,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
   .wk-table th,.wk-table td{padding:6px 8px}
   .sync-bottom{font-size:11px}
 }
+/* Cloud Sync */
+.sync-panel{border-top:1px dashed var(--border);margin-top:10px;padding-top:10px}
+.sync-status{display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:8px;flex-wrap:wrap}
+.sync-status .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sync-status .dot.off{background:var(--text3)}.sync-status .dot.ok{background:var(--ok);animation:syncPulse 3s infinite}.sync-status .dot.err{background:var(--danger)}.sync-status .dot.syncing{background:var(--warn);animation:spin 0.8s linear infinite}
+@keyframes syncPulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sync-setup{font-size:12px}
+.sync-setup input{padding:6px 10px;border:1px solid var(--border);border-radius:var(--r2);font-size:12px;outline:none;width:100%;margin:6px 0;box-sizing:border-box;background:var(--card)}
+.sync-setup input:focus{border-color:var(--pri)}
+.sync-setup .hint{font-size:11px;color:var(--text3);margin:4px 0}
+.sync-setup .hint a{color:var(--pri)}
 </style>
 </head>
 <body>
@@ -202,41 +214,41 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
 <div id="timer-bar">
   <span class="t-name" id="t-name">--</span>
   <span class="t-display" id="t-display">00:00:00</span>
-  <button class="t-pause" onclick="stopTimer()">&#x23F8; 暂停</button>
-  <button class="t-complete" onclick="completeActiveTimer()">&#x2713; 完成</button>
+  <button class="t-pause" onclick="stopTimer()">&#x23F8; 鏆傚仠</button>
+  <button class="t-complete" onclick="completeActiveTimer()">&#x2713; 瀹屾垚</button>
 </div>
 
 <script>
 // ===== DATA =====
 var STORAGE_KEY = 'wb_desk_v9';
 var MODULES = [
-  { id:'speech', name:'言语理解', icon:'\uD83D\uDDE3\uFE0F', color:'#3b82f6' },
-  { id:'judgment', name:'判断推理', icon:'\uD83E\uDDE0', color:'#8b5cf6' },
-  { id:'common', name:'常识判断', icon:'\uD83D\uDCD6', color:'#f59e0b' },
-  { id:'data', name:'资料分析', icon:'\uD83D\uDCCA', color:'#10b981' },
-  { id:'quantity', name:'数量关系', icon:'\uD83D\uDD22', color:'#ef4444' },
-  { id:'essay', name:'申论', icon:'\u270D\uFE0F', color:'#ec4899' },
-  { id:'zongying', name:'综应A类', icon:'\uD83D\uDCDD', color:'#06b6d4' },
-  { id:'teaching', name:'数学备课', icon:'\uD83D\uDCD0', color:'#84cc16' },
+  { id:'speech', name:'瑷€璇悊瑙?, icon:'\uD83D\uDDE3\uFE0F', color:'#3b82f6' },
+  { id:'judgment', name:'鍒ゆ柇鎺ㄧ悊', icon:'\uD83E\uDDE0', color:'#8b5cf6' },
+  { id:'common', name:'甯歌瘑鍒ゆ柇', icon:'\uD83D\uDCD6', color:'#f59e0b' },
+  { id:'data', name:'璧勬枡鍒嗘瀽', icon:'\uD83D\uDCCA', color:'#10b981' },
+  { id:'quantity', name:'鏁伴噺鍏崇郴', icon:'\uD83D\uDD22', color:'#ef4444' },
+  { id:'essay', name:'鐢宠', icon:'\u270D\uFE0F', color:'#ec4899' },
+  { id:'zongying', name:'缁煎簲A绫?, icon:'\uD83D\uDCDD', color:'#06b6d4' },
+  { id:'teaching', name:'鏁板澶囪', icon:'\uD83D\uDCD0', color:'#84cc16' },
 ];
 
 var sampleJobs = [
-  {t:'国家税务局',info:'行政执法类',tags:['本科及以上','应届不限','专业宽泛']},
-  {t:'海关总署',info:'综合管理类',tags:['本科及以上','应届可报','需体检']},
-  {t:'统计局调查队',info:'专业技术类',tags:['本科及以上','应届可报','统计学/经济学']},
-  {t:'铁路公安局',info:'行政执法类',tags:['专科及以上','公安学类','体能测试']},
-  {t:'海事局',info:'行政执法类',tags:['本科及以上','航海/海事','需出海']},
-  {t:'省级发改委',info:'综合管理类',tags:['本科及以上','2年经验','经济/管理类']},
-  {t:'街道办事处',info:'基层管理类',tags:['专科及以上','不限经验','不限专业']},
-  {t:'市场监管局',info:'行政执法类',tags:['本科及以上','法学/食药相关']},
-  {t:'气象局',info:'专业技术类',tags:['本科及以上','大气科学','科研辅助']},
-  {t:'外事办',info:'综合管理类',tags:['本科及以上','外语类','翻译能力']},
+  {t:'鍥藉绋庡姟灞€',info:'琛屾斂鎵ф硶绫?,tags:['鏈鍙婁互涓?,'搴斿眾涓嶉檺','涓撲笟瀹芥硾']},
+  {t:'娴峰叧鎬荤讲',info:'缁煎悎绠＄悊绫?,tags:['鏈鍙婁互涓?,'搴斿眾鍙姤','闇€浣撴']},
+  {t:'缁熻灞€璋冩煡闃?,info:'涓撲笟鎶€鏈被',tags:['鏈鍙婁互涓?,'搴斿眾鍙姤','缁熻瀛?缁忔祹瀛?]},
+  {t:'閾佽矾鍏畨灞€',info:'琛屾斂鎵ф硶绫?,tags:['涓撶鍙婁互涓?,'鍏畨瀛︾被','浣撹兘娴嬭瘯']},
+  {t:'娴蜂簨灞€',info:'琛屾斂鎵ф硶绫?,tags:['鏈鍙婁互涓?,'鑸捣/娴蜂簨','闇€鍑烘捣']},
+  {t:'鐪佺骇鍙戞敼濮?,info:'缁煎悎绠＄悊绫?,tags:['鏈鍙婁互涓?,'2骞寸粡楠?,'缁忔祹/绠＄悊绫?]},
+  {t:'琛楅亾鍔炰簨澶?,info:'鍩哄眰绠＄悊绫?,tags:['涓撶鍙婁互涓?,'涓嶉檺缁忛獙','涓嶉檺涓撲笟']},
+  {t:'甯傚満鐩戠灞€',info:'琛屾斂鎵ф硶绫?,tags:['鏈鍙婁互涓?,'娉曞/椋熻嵂鐩稿叧']},
+  {t:'姘旇薄灞€',info:'涓撲笟鎶€鏈被',tags:['鏈鍙婁互涓?,'澶ф皵绉戝','绉戠爺杈呭姪']},
+  {t:'澶栦簨鍔?,info:'缁煎悎绠＄悊绫?,tags:['鏈鍙婁互涓?,'澶栬绫?,'缈昏瘧鑳藉姏']},
 ];
 
 // ===== STATE =====
 var defaultState = function(){
   return {
-    countdown: { name:'国考', date:'2026-11-29' },
+    countdown: { name:'鍥借€?, date:'2026-11-29' },
     todos: {}, review: {}, exercise: {}, diet: {},
     interview: { notes:'' },
     activeTimer: null, streak: 0, teachingActive: false,
@@ -258,7 +270,23 @@ function loadState(){
     state.dietViewDate=state.dietViewDate||'';
   }catch(e){ state = defaultState(); }
 }
-function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  // 濡傛灉寮€鍚簡浜戝悓姝ワ紝鑷姩鎺ㄩ€?
+  if(syncEnabled()) autoPush();
+}
+function getLastModified(){
+  var raw=localStorage.getItem(STORAGE_KEY+'_ts');
+  return raw?parseInt(raw):0;
+}
+function setLastModified(ts){
+  try{ localStorage.setItem(STORAGE_KEY+'_ts',String(ts)); }catch(e){}
+}
+var _syncTimer=null;
+function autoPush(){
+  if(_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(function(){ _syncTimer=null; cloudPush(true); },800);
+}
 
 // ===== HELPERS =====
 function T(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -268,7 +296,7 @@ function fmtDur(ms){ if(!ms) return '0m'; var m=Math.floor(ms/60000); return m>=
 function fmtShort(ms){ if(!ms) return ''; var m=Math.floor(ms/60000); return m>=60?Math.floor(m/60)+'h'+(m%60)+'m':m+'m'; }
 function fmtHH(s){ return String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor((s%3600)/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
 function daysLeft(dateStr){ return dateStr?Math.max(0,Math.ceil((Date.parse(dateStr)-Date.now())/86400000)):0; }
-function greet(){ var h=new Date().getHours(); return h<6?'夜深了':h<12?'上午好':h<14?'中午好':h<18?'下午好':h<21?'晚上好':'夜深了'; }
+function greet(){ var h=new Date().getHours(); return h<6?'澶滄繁浜?:h<12?'涓婂崍濂?:h<14?'涓崍濂?:h<18?'涓嬪崍濂?:h<21?'鏅氫笂濂?:'澶滄繁浜?; }
 function dayLabel(off){ var d=new Date();d.setDate(d.getDate()-off); return (d.getMonth()+1)+'/'+d.getDate(); }
 
 function todayStudyMs(){
@@ -303,7 +331,7 @@ function renderApp(){
   var html='';
 
   // ========== HEADER: Countdown + Stats ==========
-  html+='<div class="cdown-card" onclick="toggleCountdownEdit()"><div class="edit-hint">\u270E \u8BBE\u7F6E</div><div class="days">'+dLeft+'</div><div class="label">天 · '+greet()+'\uFF0C\u540C\u5B66</div><div class="exam">\u8DDD'+state.countdown.name+' '+state.countdown.date+'</div></div>';
+  html+='<div class="cdown-card" onclick="toggleCountdownEdit()"><div class="edit-hint">\u270E \u8BBE\u7F6E</div><div class="days">'+dLeft+'</div><div class="label">澶?路 '+greet()+'\uFF0C\u540C\u5B66</div><div class="exam">\u8DDD'+state.countdown.name+' '+state.countdown.date+'</div></div>';
   html+='<div class="cdown-edit" id="cdown-edit"><div class="edit-row"><label>\u8003\u8BD5\u540D\u79F0</label><input id="ce-name" placeholder="\u4F8B\u5982\uff1a\u56FD\u8003\u3001\u7701\u8003\u3001\u4E8B\u4E1A\u5355\u4F4D..." value="'+(state.countdown.name||'')+'"></div><div class="edit-row"><label>\u8003\u8BD5\u65E5\u671F</label><input id="ce-date" type="date" value="'+(state.countdown.date||'')+'"></div><div class="edit-actions"><button class="btn-cancel" onclick="toggleCountdownEdit()">\u53D6\u6D88</button><button class="btn-save" onclick="saveCountdown()">\uD83D\uDCBE \u4FDD\u5B58</button></div></div>';
   html+='<div class="stats-row">';
   html+='<div class="stat-card"><div class="val">'+studyH+'h '+studyM+'m</div><div class="lbl">\u4ECA\u65E5\u5B66\u4E60</div></div>';
@@ -359,7 +387,7 @@ function renderApp(){
   html+=renderJobSection();
   html+='</div></div>';
 
-  // ========== INTERVIEW - 热点剖析 ==========
+  // ========== INTERVIEW - 鐑偣鍓栨瀽 ==========
   html+='<div class="card"><div class="card-hdr" onclick="toggleCard(this)"><span>\uD83D\uDD25 \u70ED\u70B9\u5256\u6790</span><span class="arrow">\u25BE</span></div><div class="card-body">';
   html+=renderInterviewSection();
   html+='</div></div>';
@@ -380,10 +408,13 @@ function renderApp(){
   html+=renderDietSection(dietDate,isDietToday);
   html+='</div></div>';
 
-  // 底部：数据管理
-  html+='<div class="card" style="text-align:center;padding:12px;"><div style="font-size:12px;color:var(--text3);margin-bottom:6px;">\uD83D\uDCE6 \u6362\u8BBE\u5907\u65F6\u53EF\u7528\u5BFC\u51FA/\u5BFC\u5165\u8F6C\u79FB\u6570\u636E</div>';
+  // 搴曢儴锛氭暟鎹鐞?+ 浜戝悓姝?
+  html+='<div class="card" style="text-align:center;padding:12px;">';
+  html+='<div style="font-size:12px;color:var(--text3);margin-bottom:6px;">\uD83D\uDCE6 \u6362\u8BBE\u5907\u65F6\u53EF\u7528\u5BFC\u51FA/\u5BFC\u5165\u8F6C\u79FB\u6570\u636E</div>';
   html+='<button class="btn btn-pri" onclick="exportData()" style="margin:0 4px;">\uD83D\uDCE4 \u5BFC\u51FA\u6570\u636E</button>';
-  html+='<button class="btn" onclick="importData()" style="background:var(--pri2);color:var(--pri);margin:0 4px;">\uD83D\uDCE5 \u5BFC\u5165\u6570\u636E</button></div>';
+  html+='<button class="btn" onclick="importData()" style="background:var(--pri2);color:var(--pri);margin:0 4px;">\uD83D\uDCE5 \u5BFC\u5165\u6570\u636E</button>';
+  html+=renderSyncPanel();
+  html+='</div>';
 
   el.innerHTML=html;
   loadModuleTodoData();
@@ -531,7 +562,7 @@ function renderPlanSection(){
   var phaseIdx=0;
   if(dLeft<=30) phaseIdx=2; else if(dLeft<=90) phaseIdx=1; else if(dLeft<=0) phaseIdx=3;
   var plans=[
-    {t:'\u57FA\u7840\u9636\u6BB5',time:'当前距考试 '+dLeft+' 天',act:0,d:'\u2460 \u7CFB\u7EDF\u5B66\u4E60\u5404\u6A21\u5757\u57FA\u7840\u7406\u8BBA<br>\u2461 \u6BCF\u5B66\u5B8C\u4E00\u6A21\u5757\u914D\u5957\u4E13\u9879\u7EC3\u4E60<br>\u2462 \u6BCF\u5468\u5C0F\u6D4B\u9A8C\u67E5\u6F0F\u8865\u7F3A<br>\u2463 \u7533\u8BBA\u5F00\u59CB\u79EF\u7D2F\u7D20\u6750',tip:'\uD83D\uDCCC \u6BCF\u5929\u4FDD\u6301 3-4 \u5C0F\u65F6\u6709\u6548\u5B66\u4E60'},
+    {t:'\u57FA\u7840\u9636\u6BB5',time:'褰撳墠璺濊€冭瘯 '+dLeft+' 澶?,act:0,d:'\u2460 \u7CFB\u7EDF\u5B66\u4E60\u5404\u6A21\u5757\u57FA\u7840\u7406\u8BBA<br>\u2461 \u6BCF\u5B66\u5B8C\u4E00\u6A21\u5757\u914D\u5957\u4E13\u9879\u7EC3\u4E60<br>\u2462 \u6BCF\u5468\u5C0F\u6D4B\u9A8C\u67E5\u6F0F\u8865\u7F3A<br>\u2463 \u7533\u8BBA\u5F00\u59CB\u79EF\u7D2F\u7D20\u6750',tip:'\uD83D\uDCCC \u6BCF\u5929\u4FDD\u6301 3-4 \u5C0F\u65F6\u6709\u6548\u5B66\u4E60'},
     {t:'\u5F3A\u5316\u9636\u6BB5',time:'\u8003\u524D 2-3 \u4E2A\u6708',act:1,d:'\u2460 \u5927\u91CF\u5237\u771F\u9898\u548C\u6A21\u62DF\u9898<br>\u2461 \u9488\u5BF9\u8584\u5F31\u6A21\u5757\u4E13\u9879\u7A81\u7834<br>\u2462 \u5F00\u59CB\u9650\u65F6\u8BAD\u7EC3\u63D0\u9AD8\u505A\u9898\u901F\u5EA6<br>\u2463 \u7533\u8BBA\u6BCF\u5468\u81F3\u5C11 2 \u7BC7\u5B8C\u6574\u7EC3\u4E60',tip:'\uD83D\uDCCC \u91CD\u70B9\u63D0\u5347\u901F\u5EA6\u548C\u51C6\u786E\u7387'},
     {t:'\u51B2\u523A\u9636\u6BB5',time:'\u8003\u524D 1 \u4E2A\u6708',act:2,d:'\u2460 \u5168\u771F\u6A21\u62DF\u8003\u8BD5\u73AF\u5883<br>\u2461 \u590D\u76D8\u9519\u9898\uFF0C\u8865\u9F50\u77ED\u677F<br>\u2462 \u8C03\u6574\u505A\u9898\u987A\u5E8F\u548C\u65F6\u95F4\u5206\u914D<br>\u2463 \u7533\u8BBA\u80CC\u8BF5\u70ED\u70B9\u7D20\u6750',tip:'\uD83D\uDCCC \u8C03\u6574\u5FC3\u6001\uFF0C\u4FDD\u6301\u624B\u611F'},
     {t:'\u9762\u8BD5\u9636\u6BB5',time:'\u7B14\u8BD5\u540E',act:3,d:'\u2460 \u7ED3\u6784\u5316\u9762\u8BD5\u7406\u8BBA\u5B66\u4E60<br>\u2461 \u6BCF\u65E5\u5F00\u53E3\u7EC3\u4E60 2-3 \u9053\u9898<br>\u2462 \u6A21\u62DF\u9762\u8BD5\u6D41\u7A0B<br>\u2463 \u79EF\u7D2F\u65F6\u4E8B\u70ED\u70B9',tip:'\uD83D\uDCCC \u5F00\u53E3\u8BF4\u6BD4\u5199\u5728\u7EB8\u4E0A\u66F4\u91CD\u8981'},
@@ -570,11 +601,11 @@ function filterJobs(){
   grid.innerHTML=jobs.map(function(j){return '<div class="job-card"><div class="j-title">'+j.t+'</div><div class="j-info">'+j.info+'</div><div class="j-tags">'+j.tags.map(function(t){return '<span class="j-tag">'+t+'</span>';}).join('')+'</div></div>';}).join('');
 }
 
-// ===== INTERVIEW - 热点剖析（从 hot_topics.json 加载） =====
+// ===== INTERVIEW - 鐑偣鍓栨瀽锛堜粠 hot_topics.json 鍔犺浇锛?=====
 var interviewHotTopics = [];
 var interviewLastUpdate = '';
 var interviewLoadError = false;
-var catColors = {'政治':'#3b82f6','经济':'#10b981','社会':'#8b5cf6','科技':'#6366f1','生态':'#059669','教育':'#f59e0b','文化':'#ec4899','民生':'#ef4444'};
+var catColors = {'鏀挎不':'#3b82f6','缁忔祹':'#10b981','绀句細':'#8b5cf6','绉戞妧':'#6366f1','鐢熸€?:'#059669','鏁欒偛':'#f59e0b','鏂囧寲':'#ec4899','姘戠敓':'#ef4444'};
 
 function loadHotTopics(){
   interviewHotTopics = [];
@@ -585,71 +616,71 @@ function loadHotTopics(){
     if(typeof HOT_TOPICS_DATA !== 'undefined' && HOT_TOPICS_DATA && HOT_TOPICS_DATA.topics && HOT_TOPICS_DATA.topics.length > 0){
       interviewHotTopics = HOT_TOPICS_DATA.topics;
       interviewLastUpdate = HOT_TOPICS_DATA.lastUpdate || '';
-      console.log('热点数据加载成功: '+interviewHotTopics.length+' 个话题, 更新日期 '+interviewLastUpdate);
+      console.log('鐑偣鏁版嵁鍔犺浇鎴愬姛: '+interviewHotTopics.length+' 涓瘽棰? 鏇存柊鏃ユ湡 '+interviewLastUpdate);
     } else {
-      throw new Error('hot_topics.js 数据无效');
+      throw new Error('hot_topics.js 鏁版嵁鏃犳晥');
     }
   } catch(err){
-    console.warn('热点数据加载失败，使用内嵌数据: '+err.message);
+    console.warn('鐑偣鏁版嵁鍔犺浇澶辫触锛屼娇鐢ㄥ唴宓屾暟鎹? '+err.message);
     interviewLoadError = true;
     fallbackHotTopics();
   }
   renderAll();
 }
-// ===== 内嵌热点数据（离线 fallback） =====
+// ===== 鍐呭祵鐑偣鏁版嵁锛堢绾?fallback锛?=====
 function fallbackHotTopics(){
   interviewHotTopics = [
-  {t:'2026世界人工智能大会',cat:'科技',src:'新华社/学习强国 7月17日',
-   article:'7月17日，习近平主席在上海出席2026世界人工智能大会暨人工智能全球治理高级别会议开幕式，发表题为《携手构建公正合理的全球人工智能治理体系》的主旨讲话。习主席提出四点意见：坚持开放共赢驱动创新发展、强化风险意识确保安全可控、鼓励包容并蓄促进文明互鉴、倡导和衷共济完善全球治理。开幕式上，29个国家代表签署协定，世界人工智能合作组织正式成立。',
-   commentary:'AI全球治理是面试必考热点。答题框架：时代背景（AI进入"前所未有的活跃期"）→中国理念（"以人为本、向上向善"）→四点意见的具体内涵→中国行动（世界人工智能合作组织、培训名额、"妈祖"方案）。金句："单弦不成音，独木不成林"；"明者因时而变，知者随事而制"。体现"人类命运共同体"理念。'},
-  {t:'庆祝中国共产党成立105周年',cat:'政治',src:'求是杂志/新华社 7月15日',
-   article:'7月1日，庆祝中国共产党成立105周年大会在北京举行。7月16日出版的《求是》杂志刊发习近平总书记重要讲话。讲话系统阐述了党的五大优秀特质：勇担历史使命始终掌握战略主动、顺应发展潮流始终走在时代前列、敢于善于斗争始终保持必胜信心、注重强健自身始终充满生机活力、坚定人民立场始终不忘初心使命。求是网评论员文章《信心在当下，更在未来》指出：百余年中华大地翻天覆地的历史巨变，让中国人民生发出由衷的自豪，坚信中国过去能、今后也一定能。',
-   commentary:'"中国共产党为什么能"是面试政治类必考题。五大优秀特质可直接用于回答"党的先进性""党的领导优势"等题目。关键表述：从50多名党员到世界第一大执政党；"打铁必须自身硬"；自我革命精神。答题时结合百余年历程中的具体事例，展现历史纵深。'},
-  {t:'上半年中国经济"稳韧新优"',cat:'经济',src:'国家统计局/人民日报 7月15日',
-   article:'7月15日，国家统计局发布2026年上半年经济数据：GDP 695704亿元，同比增长4.7%，运行在"4.5%-5%"目标区间内。高技术制造业增加值增长13.3%，3D打印设备、锂离子电池、工业机器人产量分别增长48.5%、39.3%、28%。夏粮产量3014.9亿斤，首破3000亿斤。城镇调查失业率均值5.2%，CPI温和上涨1.0%，外汇储备稳定在3.4万亿美元以上。IMF上调中国全年增长预期0.2个百分点。新动能对经济增长贡献率超40%，单位GDP能耗下降1.9%。国家统计局副局长用四个字评价：稳、韧、新、优。',
-   commentary:'经济类面试题的数据"弹药库"。答题可用"稳、韧、新、优"四字框架：增长底盘稳、抗风险韧性强、新动能加速壮大、经济结构持续优化。关键数据：GDP 4.7%、高技术制造13.3%、夏粮3000亿斤首破、失业率5.2%、CPI 1%。体现"中国经济长期向好的基本面没有改变"的核心论断。'},
-  {t:'总书记对基础教育工作作出重要指示',cat:'教育',src:'新华社/央视 7月22日',
-   article:'7月22日，全国基础教育工作会议在京召开。习近平总书记作出重要指示强调：要全面贯彻党的教育方针，落实立德树人根本任务，落实健康第一教育理念，坚持五育并举、五育融合，推进基础教育扩优提质，牢牢守住教育公平底线。丁薛祥副总理出席讲话，强调要摒弃"重分数、轻健康"的不良倾向，适应人口变化优化教育资源配置，弘扬教育家精神。会议强调加强中小学生体育、美育、劳动教育和心理健康教育，从"有学上"向"上好学"跨越。',
-   commentary:'教育公平是申论和面试经典话题。答题关键词：立德树人根本任务、健康第一理念、教育公平底线、五育并举融合。框架：理念转变（从"分数第一"到"健康第一"）→公平推进（缩小城乡区域差距、扩优提质）→教师队伍（教育家精神、待遇保障）。金句："扣好人生第一粒扣子"；"身上有汗、眼里有光"。'},
-  {t:'习近平同巴西总统卢拉通电话',cat:'政治',src:'新华社/学习强国 7月27日',
-   article:'7月27日，习近平主席应约同巴西总统卢拉通电话。习近平指出中巴命运共同体建设取得积极进展，强调中国和巴西作为全球南方重要成员，应携手推动"大金砖合作"高质量发展，谱写全球南方团结自强新篇章。卢拉高度赞赏习主席在世界人工智能大会上提出的AI全球治理理念，表示巴中贸易额再创新高，期待加强AI、能源矿产等领域合作。',
-   commentary:'大国外交类面试素材。关键词：全球南方、大金砖合作、命运共同体、多边主义。答题时可用"南南合作"框架，结合金砖国家扩员、中巴经贸数据等体现"团结自强"主题。习主席表述："坚定站在历史正确和文明进步一边"。'},
-  {t:'新就业形态职业伤害保障试点全国推开',cat:'民生',src:'人社部/人民日报 7月1日',
-   article:'7月1日起，新就业形态人员职业伤害保障试点在全国31省份全面推开。采取"按日参保、按单计费、月度缴费、总参总保"方式，个人不缴费，平台企业承担。试点自2022年启动，截至6月底累计参保2990.2万人，覆盖出行、即时配送、同城货运三个行业。新增纳入T3出行、花小猪、美团打车、小象超市、盒马鲜生等平台。被认定为职业伤害的，医疗费、伤残补助金等从工伤保险基金列支，还可享受平台提供的生活保障费。',
-   commentary:'新就业形态劳动者权益保障是面试好话题。答题框架：背景（平台经济规模大、灵活就业人口多）→问题（缺乏传统劳动关系、保障空白）→创新（按单计费、个人不缴费、全国推开）→意义（兜底保障、促进平台经济健康发展）。数字说话：2990.2万参保人。"让灵活就业者也有安全感"是加分表述。'},
-  {t:'夏粮首破3000亿斤背后的农业新质生产力',cat:'经济',src:'人民日报/央视 7月10日',
-   article:'今年全国夏粮产量3014.9亿斤，首次突破3000亿斤，比上年增长0.7%。值得关注的是，这一成绩是在"困难模式"下取得的——去年黄淮海地区连阴雨导致冬小麦晚播比例高达44.2%，麦收期间又遭遇强降水。主产区推行"以种补晚、以密补晚、以肥补晚、以好补晚、促苗转壮"的"四补一促"稳产路径，环环紧扣从"龙口夺粮"。背后是品种创新与技术集成的双轮驱动——郑麦1860等品种百亩方亩产超840公斤，5G和AI技术实现精准监测，大田生产从"依靠经验"走向"基于数据"。',
-   commentary:'粮食安全+农业新质生产力——双热点叠加。答题框架：成绩（3000亿斤首破）→挑战（极端天气、资源约束）→对策（种业振兴、高标准农田、科技赋能）。"中国饭碗端得稳，靠的不是运气，而是不断锤炼穿越风雨的能力"——人民时评原句，答题直接用。'},
-  {t:'民营经济促进法典型案例发布',cat:'经济',src:'发改委/最高检 7月22-24日',
-   article:'7月22日，国家发改委、最高检联合发布10件贯彻实施民营经济促进法典型案例；7月24日，发改委、最高法又联合发布第一批8件典型案例。案例涵盖职务侵占打击、超范围冻结财产纠正、行政"过罚不当"监督、直播带货合同诈骗惩治、转圈贸易骗局等，体现"法治是最好的营商环境"。典型案例中，一企业因叉车未经检验被罚8万，检察机关认定"过罚不当"后改罚2万；直播带货以"保底销量"为名骗取337家商户保证金2600余万元，主犯获刑超十年。',
-   commentary:'营商环境+法治建设经典考题。关键论断："法治是最好的营商环境"；"两个毫不动摇"；民营经济"56789"贡献。具体案例体现三个维度：刑事保护（打击内部腐败和诈骗）、民事监督（纠正超范围查封）、行政监督（过罚相当原则）。答题时用案例说话比空谈政策更有说服力。'},
-  {t:'重庆彭水山体崩塌抢险救援',cat:'社会',src:'人民日报/央视 7月17日',
-   article:'7月17日9时许，重庆彭水县汉葭街道发生大型山体崩塌，10余栋民房被掩埋。值得关注的是，灾害发生前网格员巡查时发现山体落石和前兆，通过"村村响"广播和居民群发布预警，成功转移1100余名群众，其中核心区60余人提前撤离，有效规避了更大伤亡。救援投入872人、千余台装备，习近平作出重要指示要求全力搜救。会议强调"四个宁可"理念：宁可十防九空不可万一失防、宁可备而不用不可用而无备、宁可听骂声不可听哭声、宁可自己辛苦不可群众受苦。',
-   commentary:'应急管理+基层治理的经典案例。答题亮点在"网格员预警"：从一个人发现前兆到千余人安全转移，体现了基层治理"神经末梢"的关键作用。"四个宁可"是体现人民至上理念的绝佳金句。三级包保责任（区县包镇街、镇街包村社、村社包网格）可用在回答基层治理类题目中。'},
-  {t:'"十五五"开局之年·新动能挑大梁',cat:'经济',src:'中国青年报/经济日报 7月21日',
-   article:'2026年是"十五五"规划开局之年。上半年数据显示新动能"日益挑大梁"：高技术制造业增长13.3%、数字产品制造业增长12.3%、装备制造业增长9.3%，共贡献工业增量近五成。服务业增长5.2%，信息软件技术服务业增长10.7%。外贸表现强劲——进出口总额25.5万亿元，增长16.9%。世界银行在《中国经济简报》中表示中国上半年经济保持韧性。IMF逆势上调中国预期，下调全球预期至3.0%。陕西至安徽特高压工程投运、海洋二号E星发射成功、钙钛矿光伏电池取得突破。',
-   commentary:'宏观经济+新质生产力的绝佳素材。可用"全球看中国"的对比视角：IMF下调全球预期却上调中国预期——中国成为动荡局势中的"稳定锚"。三大亮点：制造业高端化、服务业现代化、外贸韧性化。"十五五"开局之年的战略意义可结合规划纲要展开。'},
-  {t:'"让技术永远成为人的工具"',cat:'科技',src:'求是网 7月20日',
-   article:'求是网发表评论《让技术永远成为人的工具》，提出关键命题：当AI预测能力日益精进，人会否放弃自主判断？当机器生成的文本图像足以以假乱真，真实与虚构如何甄别？文章引用马克思观点——"机器是人的本质力量的对象化，是延伸人的能力、解放人的劳动的工具，不应异化为主宰人的力量"。警示"参数成为描述成长的唯一语言、用户画像取代对他人复杂性的体认"的主体性消解风险。强调技术必须服务于人而非屈从于技术。',
-   commentary:'AI伦理与人的主体性——面试中的深度话题。可结合世界人工智能大会上习近平四点意见中的"强化风险意识确保安全可控"。框架：技术价值（赋能千行百业）→伦理风险（算法偏见、深度伪造、就业替代）→治理路径（法律+伦理+技术监测+国际协作）。金句："确保人工智能始终处于人类控制之下"；"技术向善"。'},
-  {t:'中泰命运共同体联合声明',cat:'政治',src:'新华社 7月20日',
-   article:'7月20日，《中华人民共和国政府和泰王国政府关于面向繁荣中泰命运共同体的联合声明》发布。习近平会见泰国总理阿努廷，强调中国支持泰国新一届政府有效施政。中泰双方在互联互通、数字经济、新能源汽车、旅游人文等领域达成广泛合作共识。泰国总理高度评价习主席在人工智能大会上提出的治理理念。中泰建交50周年系列庆祝活动持续推进。',
-   commentary:'周边外交+命运共同体的经典案例。可用于回答"中国特色大国外交""亲诚惠容"等题目。关键词：中泰一家亲、命运共同体、共商共建共享。答题时突出中国"亲诚惠容"周边外交理念。'},
-  {t:'国产工业软件与科技自立自强',cat:'科技',src:'人民网/科技日报 7月13日',
-   article:'7月13日人民网报道《国产工业软件跑出加速度》：CAD/CAE/EDA等关键工业软件国产替代加速推进；国家超算互联网核心节点上线运行；长征五号遥十四火箭安全运抵文昌航天发射场；"中国智造"成为中国式现代化的亮丽名片。上半年高技术领域投资热度持续攀升，国家重点实验室体系重组加快推进，科技创新举国体制优势进一步显现。',
-   commentary:'科技自立自强+新质生产力经典素材。答题框架：为什么要自立（"卡脖子"困境）→怎么做（举国体制+市场机制+人才战略）→具体成果（工业软件、人工智能、航天）。可与"十五五"规划中科技强国建设目标结合。'},
-  {t:'美伊多哈会谈与中东局势',cat:'政治',src:'新华社/央视 7月1日',
-   article:'7月1日，美国和伊朗在卡塔尔首都多哈举行间接会谈，原预期的面对面谈判"降格"为间接会谈。会谈后双方均称进展顺利，但专家认为此举凸显美伊互信薄弱和认知"错位"。中东地缘冲突持续影响全球能源供应，上半年中国国内能源生产创历史同期新高，展现强大韧性。',
-   commentary:'国际形势类素材。可用于回答"中国在国际事务中的角色""全球治理"等题目。关键视角：中国始终主张通过对话协商解决热点问题，反对强权政治和单边制裁。可对比中国在中东问题上的建设性角色。'},
-  {t:'防汛救灾与"四个宁可"理念',cat:'社会',src:'应急管理部/央广 7月28日',
-   article:'央广网7月28日发表评论《锤炼穿越风雨的能力》，指出当前正值"七下八上"防汛关键期，全国地质灾害防控形势严峻，大概率出现南北同步发生灾情。彭水山崩后，自然资源部派出270名专家下沉各地拉网式排查。强调"三个宁可"升级为"四个宁可"理念，新增"宁可自己辛苦不可群众受苦"。湖北小龙虾新品种"潜江龙虾1号"通过国家级审定、暴雨强对流双预警齐发等新闻也从侧面展现了科技创新与风险防控并进态势。',
-   commentary:'应急管理+基层治理。答题框架：预警机制（网格员、卫星遥感）→应急响应（分级响应、联合作战）→灾后恢复（基础设施、群众安置）。"四个宁可"理念体现以人民为中心，是绝佳的面试金句。可与"枫桥经验"等基层治理素材联动使用。"一级抓一级、层层抓落实"的责任链条是制度优势的体现。'},
-  {t:'上半年就业形势与"十五五"就业规划',cat:'民生',src:'人社部/新华社 7月',
-   article:'上半年全国城镇新增就业695万人，城镇调查失业率5.2%，符合5.5%以内目标。高校毕业生规模再创新高，结构性矛盾突出——"有人没活干"和"有活没人干"并存。《实施就业优先战略"十五五"规划》部署加强产业和就业协同，稳岗扩容提质行动正在全国实施。12个新职业向社会公示，12个新职业涵盖AI训练师、碳排放管理员、研学旅行指导师等方向。失业保险打出稳就业"组合拳"，人社部推进"人工智能+人社"应用发展。',
-   commentary:'就业民生类面试高频话题。答题思路：数据说成绩（新增695万、失业率5.2%）→直面问题（结构性矛盾、毕业生规模）→政策应对（稳岗扩容、新职业开发、AI+就业）。不要只谈"就业难"的焦虑情绪，要展现政策工具箱的厚度。"就业是最大的民生工程、民心工程、根基工程"。'},
+  {t:'2026涓栫晫浜哄伐鏅鸿兘澶т細',cat:'绉戞妧',src:'鏂板崕绀?瀛︿範寮哄浗 7鏈?7鏃?,
+   article:'7鏈?7鏃ワ紝涔犺繎骞充富甯湪涓婃捣鍑哄腑2026涓栫晫浜哄伐鏅鸿兘澶т細鏆ㄤ汉宸ユ櫤鑳藉叏鐞冩不鐞嗛珮绾у埆浼氳寮€骞曞紡锛屽彂琛ㄩ涓恒€婃惡鎵嬫瀯寤哄叕姝ｅ悎鐞嗙殑鍏ㄧ悆浜哄伐鏅鸿兘娌荤悊浣撶郴銆嬬殑涓绘棬璁茶瘽銆備範涓诲腑鎻愬嚭鍥涚偣鎰忚锛氬潥鎸佸紑鏀惧叡璧㈤┍鍔ㄥ垱鏂板彂灞曘€佸己鍖栭闄╂剰璇嗙‘淇濆畨鍏ㄥ彲鎺с€侀紦鍔卞寘瀹瑰苟钃勪績杩涙枃鏄庝簰閴淬€佸€″鍜岃》鍏辨祹瀹屽杽鍏ㄧ悆娌荤悊銆傚紑骞曞紡涓婏紝29涓浗瀹朵唬琛ㄧ缃插崗瀹氾紝涓栫晫浜哄伐鏅鸿兘鍚堜綔缁勭粐姝ｅ紡鎴愮珛銆?,
+   commentary:'AI鍏ㄧ悆娌荤悊鏄潰璇曞繀鑰冪儹鐐广€傜瓟棰樻鏋讹細鏃朵唬鑳屾櫙锛圓I杩涘叆"鍓嶆墍鏈湁鐨勬椿璺冩湡"锛夆啋涓浗鐞嗗康锛?浠ヤ汉涓烘湰銆佸悜涓婂悜鍠?锛夆啋鍥涚偣鎰忚鐨勫叿浣撳唴娑碘啋涓浗琛屽姩锛堜笘鐣屼汉宸ユ櫤鑳藉悎浣滅粍缁囥€佸煿璁悕棰濄€?濡堢"鏂规锛夈€傞噾鍙ワ細"鍗曞鸡涓嶆垚闊筹紝鐙湪涓嶆垚鏋?锛?鏄庤€呭洜鏃惰€屽彉锛岀煡鑰呴殢浜嬭€屽埗"銆備綋鐜?浜虹被鍛借繍鍏卞悓浣?鐞嗗康銆?},
+  {t:'搴嗙涓浗鍏变骇鍏氭垚绔?05鍛ㄥ勾',cat:'鏀挎不',src:'姹傛槸鏉傚織/鏂板崕绀?7鏈?5鏃?,
+   article:'7鏈?鏃ワ紝搴嗙涓浗鍏变骇鍏氭垚绔?05鍛ㄥ勾澶т細鍦ㄥ寳浜妇琛屻€?鏈?6鏃ュ嚭鐗堢殑銆婃眰鏄€嬫潅蹇楀垔鍙戜範杩戝钩鎬讳功璁伴噸瑕佽璇濄€傝璇濈郴缁熼槓杩颁簡鍏氱殑浜斿ぇ浼樼鐗硅川锛氬媷鎷呭巻鍙蹭娇鍛藉缁堟帉鎻℃垬鐣ヤ富鍔ㄣ€侀『搴斿彂灞曟疆娴佸缁堣蛋鍦ㄦ椂浠ｅ墠鍒椼€佹暍浜庡杽浜庢枟浜夊缁堜繚鎸佸繀鑳滀俊蹇冦€佹敞閲嶅己鍋ヨ嚜韬缁堝厖婊＄敓鏈烘椿鍔涖€佸潥瀹氫汉姘戠珛鍦哄缁堜笉蹇樺垵蹇冧娇鍛姐€傛眰鏄綉璇勮鍛樻枃绔犮€婁俊蹇冨湪褰撲笅锛屾洿鍦ㄦ湭鏉ャ€嬫寚鍑猴細鐧句綑骞翠腑鍗庡ぇ鍦扮炕澶╄鍦扮殑鍘嗗彶宸ㄥ彉锛岃涓浗浜烘皯鐢熷彂鍑虹敱琛风殑鑷豹锛屽潥淇′腑鍥借繃鍘昏兘銆佷粖鍚庝篃涓€瀹氳兘銆?,
+   commentary:'"涓浗鍏变骇鍏氫负浠€涔堣兘"鏄潰璇曟斂娌荤被蹇呰€冮銆備簲澶т紭绉€鐗硅川鍙洿鎺ョ敤浜庡洖绛?鍏氱殑鍏堣繘鎬?"鍏氱殑棰嗗浼樺娍"绛夐鐩€傚叧閿〃杩帮細浠?0澶氬悕鍏氬憳鍒颁笘鐣岀涓€澶ф墽鏀垮厷锛?鎵撻搧蹇呴』鑷韩纭?锛涜嚜鎴戦潻鍛界簿绁炪€傜瓟棰樻椂缁撳悎鐧句綑骞村巻绋嬩腑鐨勫叿浣撲簨渚嬶紝灞曠幇鍘嗗彶绾垫繁銆?},
+  {t:'涓婂崐骞翠腑鍥界粡娴?绋抽煣鏂颁紭"',cat:'缁忔祹',src:'鍥藉缁熻灞€/浜烘皯鏃ユ姤 7鏈?5鏃?,
+   article:'7鏈?5鏃ワ紝鍥藉缁熻灞€鍙戝竷2026骞翠笂鍗婂勾缁忔祹鏁版嵁锛欸DP 695704浜垮厓锛屽悓姣斿闀?.7%锛岃繍琛屽湪"4.5%-5%"鐩爣鍖洪棿鍐呫€傞珮鎶€鏈埗閫犱笟澧炲姞鍊煎闀?3.3%锛?D鎵撳嵃璁惧銆侀攤绂诲瓙鐢垫睜銆佸伐涓氭満鍣ㄤ汉浜ч噺鍒嗗埆澧為暱48.5%銆?9.3%銆?8%銆傚绮骇閲?014.9浜挎枻锛岄鐮?000浜挎枻銆傚煄闀囪皟鏌ュけ涓氱巼鍧囧€?.2%锛孋PI娓╁拰涓婃定1.0%锛屽姹囧偍澶囩ǔ瀹氬湪3.4涓囦嚎缇庡厓浠ヤ笂銆侷MF涓婅皟涓浗鍏ㄥ勾澧為暱棰勬湡0.2涓櫨鍒嗙偣銆傛柊鍔ㄨ兘瀵圭粡娴庡闀胯础鐚巼瓒?0%锛屽崟浣岹DP鑳借€椾笅闄?.9%銆傚浗瀹剁粺璁″眬鍓眬闀跨敤鍥涗釜瀛楄瘎浠凤細绋炽€侀煣銆佹柊銆佷紭銆?,
+   commentary:'缁忔祹绫婚潰璇曢鐨勬暟鎹?寮硅嵂搴?銆傜瓟棰樺彲鐢?绋炽€侀煣銆佹柊銆佷紭"鍥涘瓧妗嗘灦锛氬闀垮簳鐩樼ǔ銆佹姉椋庨櫓闊ф€у己銆佹柊鍔ㄨ兘鍔犻€熷．澶с€佺粡娴庣粨鏋勬寔缁紭鍖栥€傚叧閿暟鎹細GDP 4.7%銆侀珮鎶€鏈埗閫?3.3%銆佸绮?000浜挎枻棣栫牬銆佸け涓氱巼5.2%銆丆PI 1%銆備綋鐜?涓浗缁忔祹闀挎湡鍚戝ソ鐨勫熀鏈潰娌℃湁鏀瑰彉"鐨勬牳蹇冭鏂€?},
+  {t:'鎬讳功璁板鍩虹鏁欒偛宸ヤ綔浣滃嚭閲嶈鎸囩ず',cat:'鏁欒偛',src:'鏂板崕绀?澶 7鏈?2鏃?,
+   article:'7鏈?2鏃ワ紝鍏ㄥ浗鍩虹鏁欒偛宸ヤ綔浼氳鍦ㄤ含鍙紑銆備範杩戝钩鎬讳功璁颁綔鍑洪噸瑕佹寚绀哄己璋冿細瑕佸叏闈㈣疮褰诲厷鐨勬暀鑲叉柟閽堬紝钀藉疄绔嬪痉鏍戜汉鏍规湰浠诲姟锛岃惤瀹炲仴搴风涓€鏁欒偛鐞嗗康锛屽潥鎸佷簲鑲插苟涓俱€佷簲鑲茶瀺鍚堬紝鎺ㄨ繘鍩虹鏁欒偛鎵╀紭鎻愯川锛岀墷鐗㈠畧浣忔暀鑲插叕骞冲簳绾裤€備竵钖涚ゥ鍓€荤悊鍑哄腑璁茶瘽锛屽己璋冭鎽掑純"閲嶅垎鏁般€佽交鍋ュ悍"鐨勪笉鑹€惧悜锛岄€傚簲浜哄彛鍙樺寲浼樺寲鏁欒偛璧勬簮閰嶇疆锛屽紭鎵暀鑲插绮剧銆備細璁己璋冨姞寮轰腑灏忓鐢熶綋鑲层€佺編鑲层€佸姵鍔ㄦ暀鑲插拰蹇冪悊鍋ュ悍鏁欒偛锛屼粠"鏈夊涓?鍚?涓婂ソ瀛?璺ㄨ秺銆?,
+   commentary:'鏁欒偛鍏钩鏄敵璁哄拰闈㈣瘯缁忓吀璇濋銆傜瓟棰樺叧閿瘝锛氱珛寰锋爲浜烘牴鏈换鍔°€佸仴搴风涓€鐞嗗康銆佹暀鑲插叕骞冲簳绾裤€佷簲鑲插苟涓捐瀺鍚堛€傛鏋讹細鐞嗗康杞彉锛堜粠"鍒嗘暟绗竴"鍒?鍋ュ悍绗竴"锛夆啋鍏钩鎺ㄨ繘锛堢缉灏忓煄涔″尯鍩熷樊璺濄€佹墿浼樻彁璐級鈫掓暀甯堥槦浼嶏紙鏁欒偛瀹剁簿绁炪€佸緟閬囦繚闅滐級銆傞噾鍙ワ細"鎵ｅソ浜虹敓绗竴绮掓墸瀛?锛?韬笂鏈夋睏銆佺溂閲屾湁鍏?銆?},
+  {t:'涔犺繎骞冲悓宸磋タ鎬荤粺鍗㈡媺閫氱數璇?,cat:'鏀挎不',src:'鏂板崕绀?瀛︿範寮哄浗 7鏈?7鏃?,
+   article:'7鏈?7鏃ワ紝涔犺繎骞充富甯簲绾﹀悓宸磋タ鎬荤粺鍗㈡媺閫氱數璇濄€備範杩戝钩鎸囧嚭涓反鍛借繍鍏卞悓浣撳缓璁惧彇寰楃Н鏋佽繘灞曪紝寮鸿皟涓浗鍜屽反瑗夸綔涓哄叏鐞冨崡鏂归噸瑕佹垚鍛橈紝搴旀惡鎵嬫帹鍔?澶ч噾鐮栧悎浣?楂樿川閲忓彂灞曪紝璋卞啓鍏ㄧ悆鍗楁柟鍥㈢粨鑷己鏂扮瘒绔犮€傚崲鎷夐珮搴﹁禐璧忎範涓诲腑鍦ㄤ笘鐣屼汉宸ユ櫤鑳藉ぇ浼氫笂鎻愬嚭鐨凙I鍏ㄧ悆娌荤悊鐞嗗康锛岃〃绀哄反涓锤鏄撻鍐嶅垱鏂伴珮锛屾湡寰呭姞寮篈I銆佽兘婧愮熆浜х瓑棰嗗煙鍚堜綔銆?,
+   commentary:'澶у浗澶栦氦绫婚潰璇曠礌鏉愩€傚叧閿瘝锛氬叏鐞冨崡鏂广€佸ぇ閲戠爾鍚堜綔銆佸懡杩愬叡鍚屼綋銆佸杈逛富涔夈€傜瓟棰樻椂鍙敤"鍗楀崡鍚堜綔"妗嗘灦锛岀粨鍚堥噾鐮栧浗瀹舵墿鍛樸€佷腑宸寸粡璐告暟鎹瓑浣撶幇"鍥㈢粨鑷己"涓婚銆備範涓诲腑琛ㄨ堪锛?鍧氬畾绔欏湪鍘嗗彶姝ｇ‘鍜屾枃鏄庤繘姝ヤ竴杈?銆?},
+  {t:'鏂板氨涓氬舰鎬佽亴涓氫激瀹充繚闅滆瘯鐐瑰叏鍥芥帹寮€',cat:'姘戠敓',src:'浜虹ぞ閮?浜烘皯鏃ユ姤 7鏈?鏃?,
+   article:'7鏈?鏃ヨ捣锛屾柊灏变笟褰㈡€佷汉鍛樿亴涓氫激瀹充繚闅滆瘯鐐瑰湪鍏ㄥ浗31鐪佷唤鍏ㄩ潰鎺ㄥ紑銆傞噰鍙?鎸夋棩鍙備繚銆佹寜鍗曡璐广€佹湀搴︾即璐广€佹€诲弬鎬讳繚"鏂瑰紡锛屼釜浜轰笉缂磋垂锛屽钩鍙颁紒涓氭壙鎷呫€傝瘯鐐硅嚜2022骞村惎鍔紝鎴嚦6鏈堝簳绱鍙備繚2990.2涓囦汉锛岃鐩栧嚭琛屻€佸嵆鏃堕厤閫併€佸悓鍩庤揣杩愪笁涓涓氥€傛柊澧炵撼鍏3鍑鸿銆佽姳灏忕尓銆佺編鍥㈡墦杞︺€佸皬璞¤秴甯傘€佺洅椹矞鐢熺瓑骞冲彴銆傝璁ゅ畾涓鸿亴涓氫激瀹崇殑锛屽尰鐤楄垂銆佷激娈嬭ˉ鍔╅噾绛変粠宸ヤ激淇濋櫓鍩洪噾鍒楁敮锛岃繕鍙韩鍙楀钩鍙版彁渚涚殑鐢熸椿淇濋殰璐广€?,
+   commentary:'鏂板氨涓氬舰鎬佸姵鍔ㄨ€呮潈鐩婁繚闅滄槸闈㈣瘯濂借瘽棰樸€傜瓟棰樻鏋讹細鑳屾櫙锛堝钩鍙扮粡娴庤妯″ぇ銆佺伒娲诲氨涓氫汉鍙ｅ锛夆啋闂锛堢己涔忎紶缁熷姵鍔ㄥ叧绯汇€佷繚闅滅┖鐧斤級鈫掑垱鏂帮紙鎸夊崟璁¤垂銆佷釜浜轰笉缂磋垂銆佸叏鍥芥帹寮€锛夆啋鎰忎箟锛堝厹搴曚繚闅溿€佷績杩涘钩鍙扮粡娴庡仴搴峰彂灞曪級銆傛暟瀛楄璇濓細2990.2涓囧弬淇濅汉銆?璁╃伒娲诲氨涓氳€呬篃鏈夊畨鍏ㄦ劅"鏄姞鍒嗚〃杩般€?},
+  {t:'澶忕伯棣栫牬3000浜挎枻鑳屽悗鐨勫啘涓氭柊璐ㄧ敓浜у姏',cat:'缁忔祹',src:'浜烘皯鏃ユ姤/澶 7鏈?0鏃?,
+   article:'浠婂勾鍏ㄥ浗澶忕伯浜ч噺3014.9浜挎枻锛岄娆＄獊鐮?000浜挎枻锛屾瘮涓婂勾澧為暱0.7%銆傚€煎緱鍏虫敞鐨勬槸锛岃繖涓€鎴愮哗鏄湪"鍥伴毦妯″紡"涓嬪彇寰楃殑鈥斺€斿幓骞撮粍娣捣鍦板尯杩為槾闆ㄥ鑷村啲灏忛害鏅氭挱姣斾緥楂樿揪44.2%锛岄害鏀舵湡闂村張閬亣寮洪檷姘淬€備富浜у尯鎺ㄨ"浠ョ琛ユ櫄銆佷互瀵嗚ˉ鏅氥€佷互鑲ヨˉ鏅氥€佷互濂借ˉ鏅氥€佷績鑻楄浆澹?鐨?鍥涜ˉ涓€淇?绋充骇璺緞锛岀幆鐜揣鎵ｄ粠"榫欏彛澶虹伯"銆傝儗鍚庢槸鍝佺鍒涙柊涓庢妧鏈泦鎴愮殑鍙岃疆椹卞姩鈥斺€旈儜楹?860绛夊搧绉嶇櫨浜╂柟浜╀骇瓒?40鍏枻锛?G鍜孉I鎶€鏈疄鐜扮簿鍑嗙洃娴嬶紝澶х敯鐢熶骇浠?渚濋潬缁忛獙"璧板悜"鍩轰簬鏁版嵁"銆?,
+   commentary:'绮瀹夊叏+鍐滀笟鏂拌川鐢熶骇鍔涒€斺€斿弻鐑偣鍙犲姞銆傜瓟棰樻鏋讹細鎴愮哗锛?000浜挎枻棣栫牬锛夆啋鎸戞垬锛堟瀬绔ぉ姘斻€佽祫婧愮害鏉燂級鈫掑绛栵紙绉嶄笟鎸叴銆侀珮鏍囧噯鍐滅敯銆佺鎶€璧嬭兘锛夈€?涓浗楗绔緱绋筹紝闈犵殑涓嶆槸杩愭皵锛岃€屾槸涓嶆柇閿ょ偧绌胯秺椋庨洦鐨勮兘鍔?鈥斺€斾汉姘戞椂璇勫師鍙ワ紝绛旈鐩存帴鐢ㄣ€?},
+  {t:'姘戣惀缁忔祹淇冭繘娉曞吀鍨嬫渚嬪彂甯?,cat:'缁忔祹',src:'鍙戞敼濮?鏈€楂樻 7鏈?2-24鏃?,
+   article:'7鏈?2鏃ワ紝鍥藉鍙戞敼濮斻€佹渶楂樻鑱斿悎鍙戝竷10浠惰疮褰诲疄鏂芥皯钀ョ粡娴庝績杩涙硶鍏稿瀷妗堜緥锛?鏈?4鏃ワ紝鍙戞敼濮斻€佹渶楂樻硶鍙堣仈鍚堝彂甯冪涓€鎵?浠跺吀鍨嬫渚嬨€傛渚嬫兜鐩栬亴鍔′镜鍗犳墦鍑汇€佽秴鑼冨洿鍐荤粨璐骇绾犳銆佽鏀?杩囩綒涓嶅綋"鐩戠潱銆佺洿鎾甫璐у悎鍚岃瘓楠楁儵娌汇€佽浆鍦堣锤鏄撻獥灞€绛夛紝浣撶幇"娉曟不鏄渶濂界殑钀ュ晢鐜"銆傚吀鍨嬫渚嬩腑锛屼竴浼佷笟鍥犲弶杞︽湭缁忔楠岃缃?涓囷紝妫€瀵熸満鍏宠瀹?杩囩綒涓嶅綋"鍚庢敼缃?涓囷紱鐩存挱甯﹁揣浠?淇濆簳閿€閲?涓哄悕楠楀彇337瀹跺晢鎴蜂繚璇侀噾2600浣欎竾鍏冿紝涓荤姱鑾峰垜瓒呭崄骞淬€?,
+   commentary:'钀ュ晢鐜+娉曟不寤鸿缁忓吀鑰冮銆傚叧閿鏂細"娉曟不鏄渶濂界殑钀ュ晢鐜"锛?涓や釜姣笉鍔ㄦ憞"锛涙皯钀ョ粡娴?56789"璐＄尞銆傚叿浣撴渚嬩綋鐜颁笁涓淮搴︼細鍒戜簨淇濇姢锛堟墦鍑诲唴閮ㄨ厫璐ュ拰璇堥獥锛夈€佹皯浜嬬洃鐫ｏ紙绾犳瓒呰寖鍥存煡灏侊級銆佽鏀跨洃鐫ｏ紙杩囩綒鐩稿綋鍘熷垯锛夈€傜瓟棰樻椂鐢ㄦ渚嬭璇濇瘮绌鸿皥鏀跨瓥鏇存湁璇存湇鍔涖€?},
+  {t:'閲嶅簡褰按灞变綋宕╁鎶㈤櫓鏁戞彺',cat:'绀句細',src:'浜烘皯鏃ユ姤/澶 7鏈?7鏃?,
+   article:'7鏈?7鏃?鏃惰锛岄噸搴嗗江姘村幙姹夎懎琛楅亾鍙戠敓澶у瀷灞变綋宕╁锛?0浣欐爧姘戞埧琚帺鍩嬨€傚€煎緱鍏虫敞鐨勬槸锛岀伨瀹冲彂鐢熷墠缃戞牸鍛樺贰鏌ユ椂鍙戠幇灞变綋钀界煶鍜屽墠鍏嗭紝閫氳繃"鏉戞潙鍝?骞挎挱鍜屽眳姘戠兢鍙戝竷棰勮锛屾垚鍔熻浆绉?100浣欏悕缇や紬锛屽叾涓牳蹇冨尯60浣欎汉鎻愬墠鎾ょ锛屾湁鏁堣閬夸簡鏇村ぇ浼や骸銆傛晳鎻存姇鍏?72浜恒€佸崈浣欏彴瑁呭锛屼範杩戝钩浣滃嚭閲嶈鎸囩ず瑕佹眰鍏ㄥ姏鎼滄晳銆備細璁己璋?鍥涗釜瀹佸彲"鐞嗗康锛氬畞鍙崄闃蹭節绌轰笉鍙竾涓€澶遍槻銆佸畞鍙鑰屼笉鐢ㄤ笉鍙敤鑰屾棤澶囥€佸畞鍙惉楠傚０涓嶅彲鍚摥澹般€佸畞鍙嚜宸辫緵鑻︿笉鍙兢浼楀彈鑻︺€?,
+   commentary:'搴旀€ョ鐞?鍩哄眰娌荤悊鐨勭粡鍏告渚嬨€傜瓟棰樹寒鐐瑰湪"缃戞牸鍛橀璀?锛氫粠涓€涓汉鍙戠幇鍓嶅厗鍒板崈浣欎汉瀹夊叏杞Щ锛屼綋鐜颁簡鍩哄眰娌荤悊"绁炵粡鏈ⅱ"鐨勫叧閿綔鐢ㄣ€?鍥涗釜瀹佸彲"鏄綋鐜颁汉姘戣嚦涓婄悊蹇电殑缁濅匠閲戝彞銆備笁绾у寘淇濊矗浠伙紙鍖哄幙鍖呴晣琛椼€侀晣琛楀寘鏉戠ぞ銆佹潙绀惧寘缃戞牸锛夊彲鐢ㄥ湪鍥炵瓟鍩哄眰娌荤悊绫婚鐩腑銆?},
+  {t:'"鍗佷簲浜?寮€灞€涔嬪勾路鏂板姩鑳芥寫澶ф',cat:'缁忔祹',src:'涓浗闈掑勾鎶?缁忔祹鏃ユ姤 7鏈?1鏃?,
+   article:'2026骞存槸"鍗佷簲浜?瑙勫垝寮€灞€涔嬪勾銆備笂鍗婂勾鏁版嵁鏄剧ず鏂板姩鑳?鏃ョ泭鎸戝ぇ姊?锛氶珮鎶€鏈埗閫犱笟澧為暱13.3%銆佹暟瀛椾骇鍝佸埗閫犱笟澧為暱12.3%銆佽澶囧埗閫犱笟澧為暱9.3%锛屽叡璐＄尞宸ヤ笟澧為噺杩戜簲鎴愩€傛湇鍔′笟澧為暱5.2%锛屼俊鎭蒋浠舵妧鏈湇鍔′笟澧為暱10.7%銆傚璐歌〃鐜板己鍔测€斺€旇繘鍑哄彛鎬婚25.5涓囦嚎鍏冿紝澧為暱16.9%銆備笘鐣岄摱琛屽湪銆婁腑鍥界粡娴庣畝鎶ャ€嬩腑琛ㄧず涓浗涓婂崐骞寸粡娴庝繚鎸侀煣鎬с€侷MF閫嗗娍涓婅皟涓浗棰勬湡锛屼笅璋冨叏鐞冮鏈熻嚦3.0%銆傞檿瑗胯嚦瀹夊窘鐗归珮鍘嬪伐绋嬫姇杩愩€佹捣娲嬩簩鍙稥鏄熷彂灏勬垚鍔熴€侀挋閽涚熆鍏変紡鐢垫睜鍙栧緱绐佺牬銆?,
+   commentary:'瀹忚缁忔祹+鏂拌川鐢熶骇鍔涚殑缁濅匠绱犳潗銆傚彲鐢?鍏ㄧ悆鐪嬩腑鍥?鐨勫姣旇瑙掞細IMF涓嬭皟鍏ㄧ悆棰勬湡鍗翠笂璋冧腑鍥介鏈熲€斺€斾腑鍥芥垚涓哄姩鑽″眬鍔夸腑鐨?绋冲畾閿?銆備笁澶т寒鐐癸細鍒堕€犱笟楂樼鍖栥€佹湇鍔′笟鐜颁唬鍖栥€佸璐搁煣鎬у寲銆?鍗佷簲浜?寮€灞€涔嬪勾鐨勬垬鐣ユ剰涔夊彲缁撳悎瑙勫垝绾茶灞曞紑銆?},
+  {t:'"璁╂妧鏈案杩滄垚涓轰汉鐨勫伐鍏?',cat:'绉戞妧',src:'姹傛槸缃?7鏈?0鏃?,
+   article:'姹傛槸缃戝彂琛ㄨ瘎璁恒€婅鎶€鏈案杩滄垚涓轰汉鐨勫伐鍏枫€嬶紝鎻愬嚭鍏抽敭鍛介锛氬綋AI棰勬祴鑳藉姏鏃ョ泭绮捐繘锛屼汉浼氬惁鏀惧純鑷富鍒ゆ柇锛熷綋鏈哄櫒鐢熸垚鐨勬枃鏈浘鍍忚冻浠ヤ互鍋囦贡鐪燂紝鐪熷疄涓庤櫄鏋勫浣曠攧鍒紵鏂囩珷寮曠敤椹厠鎬濊鐐光€斺€?鏈哄櫒鏄汉鐨勬湰璐ㄥ姏閲忕殑瀵硅薄鍖栵紝鏄欢浼镐汉鐨勮兘鍔涖€佽В鏀句汉鐨勫姵鍔ㄧ殑宸ュ叿锛屼笉搴斿紓鍖栦负涓诲浜虹殑鍔涢噺"銆傝绀?鍙傛暟鎴愪负鎻忚堪鎴愰暱鐨勫敮涓€璇█銆佺敤鎴风敾鍍忓彇浠ｅ浠栦汉澶嶆潅鎬х殑浣撹"鐨勪富浣撴€ф秷瑙ｉ闄┿€傚己璋冩妧鏈繀椤绘湇鍔′簬浜鸿€岄潪灞堜粠浜庢妧鏈€?,
+   commentary:'AI浼︾悊涓庝汉鐨勪富浣撴€р€斺€旈潰璇曚腑鐨勬繁搴﹁瘽棰樸€傚彲缁撳悎涓栫晫浜哄伐鏅鸿兘澶т細涓婁範杩戝钩鍥涚偣鎰忚涓殑"寮哄寲椋庨櫓鎰忚瘑纭繚瀹夊叏鍙帶"銆傛鏋讹細鎶€鏈环鍊硷紙璧嬭兘鍗冭鐧句笟锛夆啋浼︾悊椋庨櫓锛堢畻娉曞亸瑙併€佹繁搴︿吉閫犮€佸氨涓氭浛浠ｏ級鈫掓不鐞嗚矾寰勶紙娉曞緥+浼︾悊+鎶€鏈洃娴?鍥介檯鍗忎綔锛夈€傞噾鍙ワ細"纭繚浜哄伐鏅鸿兘濮嬬粓澶勪簬浜虹被鎺у埗涔嬩笅"锛?鎶€鏈悜鍠?銆?},
+  {t:'涓嘲鍛借繍鍏卞悓浣撹仈鍚堝０鏄?,cat:'鏀挎不',src:'鏂板崕绀?7鏈?0鏃?,
+   article:'7鏈?0鏃ワ紝銆婁腑鍗庝汉姘戝叡鍜屽浗鏀垮簻鍜屾嘲鐜嬪浗鏀垮簻鍏充簬闈㈠悜绻佽崳涓嘲鍛借繍鍏卞悓浣撶殑鑱斿悎澹版槑銆嬪彂甯冦€備範杩戝钩浼氳娉板浗鎬荤悊闃垮姫寤凤紝寮鸿皟涓浗鏀寔娉板浗鏂颁竴灞婃斂搴滄湁鏁堟柦鏀裤€備腑娉板弻鏂瑰湪浜掕仈浜掗€氥€佹暟瀛楃粡娴庛€佹柊鑳芥簮姹借溅銆佹梾娓镐汉鏂囩瓑棰嗗煙杈炬垚骞挎硾鍚堜綔鍏辫瘑銆傛嘲鍥芥€荤悊楂樺害璇勪环涔犱富甯湪浜哄伐鏅鸿兘澶т細涓婃彁鍑虹殑娌荤悊鐞嗗康銆備腑娉板缓浜?0鍛ㄥ勾绯诲垪搴嗙娲诲姩鎸佺画鎺ㄨ繘銆?,
+   commentary:'鍛ㄨ竟澶栦氦+鍛借繍鍏卞悓浣撶殑缁忓吀妗堜緥銆傚彲鐢ㄤ簬鍥炵瓟"涓浗鐗硅壊澶у浗澶栦氦""浜茶瘹鎯犲"绛夐鐩€傚叧閿瘝锛氫腑娉颁竴瀹朵翰銆佸懡杩愬叡鍚屼綋銆佸叡鍟嗗叡寤哄叡浜€傜瓟棰樻椂绐佸嚭涓浗"浜茶瘹鎯犲"鍛ㄨ竟澶栦氦鐞嗗康銆?},
+  {t:'鍥戒骇宸ヤ笟杞欢涓庣鎶€鑷珛鑷己',cat:'绉戞妧',src:'浜烘皯缃?绉戞妧鏃ユ姤 7鏈?3鏃?,
+   article:'7鏈?3鏃ヤ汉姘戠綉鎶ラ亾銆婂浗浜у伐涓氳蒋浠惰窇鍑哄姞閫熷害銆嬶細CAD/CAE/EDA绛夊叧閿伐涓氳蒋浠跺浗浜ф浛浠ｅ姞閫熸帹杩涳紱鍥藉瓒呯畻浜掕仈缃戞牳蹇冭妭鐐逛笂绾胯繍琛岋紱闀垮緛浜斿彿閬ュ崄鍥涚伀绠畨鍏ㄨ繍鎶垫枃鏄岃埅澶╁彂灏勫満锛?涓浗鏅洪€?鎴愪负涓浗寮忕幇浠ｅ寲鐨勪寒涓藉悕鐗囥€備笂鍗婂勾楂樻妧鏈鍩熸姇璧勭儹搴︽寔缁攢鍗囷紝鍥藉閲嶇偣瀹為獙瀹や綋绯婚噸缁勫姞蹇帹杩涳紝绉戞妧鍒涙柊涓惧浗浣撳埗浼樺娍杩涗竴姝ユ樉鐜般€?,
+   commentary:'绉戞妧鑷珛鑷己+鏂拌川鐢熶骇鍔涚粡鍏哥礌鏉愩€傜瓟棰樻鏋讹細涓轰粈涔堣鑷珛锛?鍗¤剸瀛?鍥板锛夆啋鎬庝箞鍋氾紙涓惧浗浣撳埗+甯傚満鏈哄埗+浜烘墠鎴樼暐锛夆啋鍏蜂綋鎴愭灉锛堝伐涓氳蒋浠躲€佷汉宸ユ櫤鑳姐€佽埅澶╋級銆傚彲涓?鍗佷簲浜?瑙勫垝涓鎶€寮哄浗寤鸿鐩爣缁撳悎銆?},
+  {t:'缇庝紛澶氬搱浼氳皥涓庝腑涓滃眬鍔?,cat:'鏀挎不',src:'鏂板崕绀?澶 7鏈?鏃?,
+   article:'7鏈?鏃ワ紝缇庡浗鍜屼紛鏈楀湪鍗″灏旈閮藉鍝堜妇琛岄棿鎺ヤ細璋堬紝鍘熼鏈熺殑闈㈠闈㈣皥鍒?闄嶆牸"涓洪棿鎺ヤ細璋堛€備細璋堝悗鍙屾柟鍧囩О杩涘睍椤哄埄锛屼絾涓撳璁や负姝や妇鍑告樉缇庝紛浜掍俊钖勫急鍜岃鐭?閿欎綅"銆備腑涓滃湴缂樺啿绐佹寔缁奖鍝嶅叏鐞冭兘婧愪緵搴旓紝涓婂崐骞翠腑鍥藉浗鍐呰兘婧愮敓浜у垱鍘嗗彶鍚屾湡鏂伴珮锛屽睍鐜板己澶ч煣鎬с€?,
+   commentary:'鍥介檯褰㈠娍绫荤礌鏉愩€傚彲鐢ㄤ簬鍥炵瓟"涓浗鍦ㄥ浗闄呬簨鍔′腑鐨勮鑹?"鍏ㄧ悆娌荤悊"绛夐鐩€傚叧閿瑙掞細涓浗濮嬬粓涓诲紶閫氳繃瀵硅瘽鍗忓晢瑙ｅ喅鐑偣闂锛屽弽瀵瑰己鏉冩斂娌诲拰鍗曡竟鍒惰銆傚彲瀵规瘮涓浗鍦ㄤ腑涓滈棶棰樹笂鐨勫缓璁炬€ц鑹层€?},
+  {t:'闃叉睕鏁戠伨涓?鍥涗釜瀹佸彲"鐞嗗康',cat:'绀句細',src:'搴旀€ョ鐞嗛儴/澶箍 7鏈?8鏃?,
+   article:'澶箍缃?鏈?8鏃ュ彂琛ㄨ瘎璁恒€婇敜鐐肩┛瓒婇闆ㄧ殑鑳藉姏銆嬶紝鎸囧嚭褰撳墠姝ｅ€?涓冧笅鍏笂"闃叉睕鍏抽敭鏈燂紝鍏ㄥ浗鍦拌川鐏惧闃叉帶褰㈠娍涓ュ郴锛屽ぇ姒傜巼鍑虹幇鍗楀寳鍚屾鍙戠敓鐏炬儏銆傚江姘村北宕╁悗锛岃嚜鐒惰祫婧愰儴娲惧嚭270鍚嶄笓瀹朵笅娌夊悇鍦版媺缃戝紡鎺掓煡銆傚己璋?涓変釜瀹佸彲"鍗囩骇涓?鍥涗釜瀹佸彲"鐞嗗康锛屾柊澧?瀹佸彲鑷繁杈涜嫤涓嶅彲缇や紬鍙楄嫤"銆傛箹鍖楀皬榫欒櫨鏂板搧绉?娼滄睙榫欒櫨1鍙?閫氳繃鍥藉绾у瀹氥€佹毚闆ㄥ己瀵规祦鍙岄璀﹂綈鍙戠瓑鏂伴椈涔熶粠渚ч潰灞曠幇浜嗙鎶€鍒涙柊涓庨闄╅槻鎺у苟杩涙€佸娍銆?,
+   commentary:'搴旀€ョ鐞?鍩哄眰娌荤悊銆傜瓟棰樻鏋讹細棰勮鏈哄埗锛堢綉鏍煎憳銆佸崼鏄熼仴鎰燂級鈫掑簲鎬ュ搷搴旓紙鍒嗙骇鍝嶅簲銆佽仈鍚堜綔鎴橈級鈫掔伨鍚庢仮澶嶏紙鍩虹璁炬柦銆佺兢浼楀畨缃級銆?鍥涗釜瀹佸彲"鐞嗗康浣撶幇浠ヤ汉姘戜负涓績锛屾槸缁濅匠鐨勯潰璇曢噾鍙ャ€傚彲涓?鏋ˉ缁忛獙"绛夊熀灞傛不鐞嗙礌鏉愯仈鍔ㄤ娇鐢ㄣ€?涓€绾ф姄涓€绾с€佸眰灞傛姄钀藉疄"鐨勮矗浠婚摼鏉℃槸鍒跺害浼樺娍鐨勪綋鐜般€?},
+  {t:'涓婂崐骞村氨涓氬舰鍔夸笌"鍗佷簲浜?灏变笟瑙勫垝',cat:'姘戠敓',src:'浜虹ぞ閮?鏂板崕绀?7鏈?,
+   article:'涓婂崐骞村叏鍥藉煄闀囨柊澧炲氨涓?95涓囦汉锛屽煄闀囪皟鏌ュけ涓氱巼5.2%锛岀鍚?.5%浠ュ唴鐩爣銆傞珮鏍℃瘯涓氱敓瑙勬ā鍐嶅垱鏂伴珮锛岀粨鏋勬€х煕鐩剧獊鍑衡€斺€?鏈変汉娌℃椿骞?鍜?鏈夋椿娌′汉骞?骞跺瓨銆傘€婂疄鏂藉氨涓氫紭鍏堟垬鐣?鍗佷簲浜?瑙勫垝銆嬮儴缃插姞寮轰骇涓氬拰灏变笟鍗忓悓锛岀ǔ宀楁墿瀹规彁璐ㄨ鍔ㄦ鍦ㄥ叏鍥藉疄鏂姐€?2涓柊鑱屼笟鍚戠ぞ浼氬叕绀猴紝12涓柊鑱屼笟娑电洊AI璁粌甯堛€佺⒊鎺掓斁绠＄悊鍛樸€佺爺瀛︽梾琛屾寚瀵煎笀绛夋柟鍚戙€傚け涓氫繚闄╂墦鍑虹ǔ灏变笟"缁勫悎鎷?锛屼汉绀鹃儴鎺ㄨ繘"浜哄伐鏅鸿兘+浜虹ぞ"搴旂敤鍙戝睍銆?,
+   commentary:'灏变笟姘戠敓绫婚潰璇曢珮棰戣瘽棰樸€傜瓟棰樻€濊矾锛氭暟鎹鎴愮哗锛堟柊澧?95涓囥€佸け涓氱巼5.2%锛夆啋鐩撮潰闂锛堢粨鏋勬€х煕鐩俱€佹瘯涓氱敓瑙勬ā锛夆啋鏀跨瓥搴斿锛堢ǔ宀楁墿瀹广€佹柊鑱屼笟寮€鍙戙€丄I+灏变笟锛夈€備笉瑕佸彧璋?灏变笟闅?鐨勭劍铏戞儏缁紝瑕佸睍鐜版斂绛栧伐鍏风鐨勫帤搴︺€?灏变笟鏄渶澶х殑姘戠敓宸ョ▼銆佹皯蹇冨伐绋嬨€佹牴鍩哄伐绋?銆?},
   ];
   interviewLastUpdate = '2026-07-29';
-  console.log('已加载内嵌热点数据: '+interviewHotTopics.length+' 个话题');
+  console.log('宸插姞杞藉唴宓岀儹鐐规暟鎹? '+interviewHotTopics.length+' 涓瘽棰?);
 }
 
 function renderInterviewSection(){
@@ -841,10 +872,13 @@ function updateStreak(){
 }
 
 // ===== INIT =====
-function init(){ loadState(); state.activeTimer=null; if(timerInterval){clearInterval(timerInterval);timerInterval=null;} fallbackHotTopics(); loadHotTopics(); }
+function init(){ loadState(); state.activeTimer=null; if(timerInterval){clearInterval(timerInterval);timerInterval=null;} fallbackHotTopics(); loadHotTopics();
+  // 濡傛灉寮€鍚簡浜戝悓姝ワ紝鑷姩鎷夊彇
+  if(syncEnabled()){ autoPull(); }
+}
 document.addEventListener('DOMContentLoaded',init);
 
-// ===== 数据导出/导入（换设备手动转移） =====
+// ===== 鏁版嵁瀵煎嚭/瀵煎叆锛堟崲璁惧鎵嬪姩杞Щ锛?=====
 function exportData(){
   try{
     var copy={};
@@ -854,7 +888,7 @@ function exportData(){
     var blob=new Blob([json],{type:'application/json'});
     var a=document.createElement('a');
     a.href=URL.createObjectURL(blob);
-    a.download='考公工作台_备份_'+T()+'.json';
+    a.download='鑰冨叕宸ヤ綔鍙癬澶囦唤_'+T()+'.json';
     a.click();
     URL.revokeObjectURL(a.href);
     showToast('\u2705 \u6570\u636E\u5DF2\u5BFC\u51FA\uFF0C\u4FDD\u5B58\u5230\u624B\u673A\u4E0A\u5373\u53EF\u8F6C\u79FB');
@@ -896,6 +930,215 @@ function showToast(msg){
   clearTimeout(t._timer);
   t._timer=setTimeout(function(){t.style.opacity='0';},2000);
 }
+
+// ===== 浜戝悓姝ワ紙GitHub Gist锛?=====
+var GIST_SYNC_KEY = STORAGE_KEY + '_sync';
+var SYNC_STATE = { status:'off', msg:'', gistId:'', token:'', tokenHint:'' };
+
+function loadSyncState(){
+  try{
+    var raw=localStorage.getItem(GIST_SYNC_KEY);
+    if(raw) SYNC_STATE = Object.assign({ status:'off', msg:'', gistId:'', token:'', tokenHint:'' }, JSON.parse(raw));
+  }catch(e){}
+}
+loadSyncState();
+
+function saveSyncState(){
+  try{ localStorage.setItem(GIST_SYNC_KEY, JSON.stringify(SYNC_STATE)); }catch(e){}
+}
+function syncEnabled(){ return SYNC_STATE.token && SYNC_STATE.gistId; }
+
+function renderSyncPanel(){
+  var html='<div class="sync-panel"><div class="sync-status" id="sync-status">';
+  var s=SYNC_STATE;
+  if(!s.token){
+    html+='<span class="dot off"></span><span style="color:var(--text3);">\u2601\uFE0F \u4E91\u540C\u6B65\u672A\u5F00\u542F \u2014 \u591A\u8BBE\u5907\u81EA\u52A8\u540C\u6B65\u6570\u636E</span>';
+  } else if(s.status==='ok'){
+    html+='<span class="dot ok"></span><span style="color:var(--ok);font-weight:600;">\u2601\uFE0F \u5DF2\u540C\u6B65</span>';
+    if(s.msg) html+='<span style="font-size:11px;color:var(--text3);">\u00B7 '+s.msg+'</span>';
+    html+='<span onclick="cloudPull()" style="margin-left:auto;font-size:11px;color:var(--pri);cursor:pointer;font-weight:600;">\uD83D\uDD04 \u540C\u6B65</span>';
+  } else if(s.status==='syncing'){
+    html+='<span class="dot syncing"></span><span style="color:var(--warn);font-weight:600;">\u2601\uFE0F \u540C\u6B65\u4E2D\u2026</span>';
+  } else if(s.status==='err'){
+    html+='<span class="dot err"></span><span style="color:var(--danger);font-weight:600;">\u2601\uFE0F \u540C\u6B65\u5931\u8D25</span>';
+    if(s.msg) html+='<span style="font-size:11px;color:var(--danger);">\u00B7 '+s.msg+'</span>';
+    html+='<span onclick="cloudPull()" style="margin-left:auto;font-size:11px;color:var(--pri);cursor:pointer;font-weight:600;">\uD83D\uDD04 \u91CD\u8BD5</span>';
+  }
+  html+='</div>';
+  html+='<div class="sync-setup" id="sync-setup">';
+  html+='<div class="hint">\uD83D\uDD10 \u8F93\u5165 <a href="https://github.com/settings/tokens" target="_blank">GitHub Token</a> \u5373\u53EF\u5F00\u542F\u591A\u8BBE\u5907\u81EA\u52A8\u540C\u6B65\uFF08\u4EC5\u5B58\u50A8\u5728\u672C\u5730\uFF09</div>';
+  if(s.token){
+    html+='<div style="display:flex;gap:6px;align-items:center;">';
+    html+='<span style="font-size:11px;color:var(--text3);">Token: '+(s.tokenHint||'***')+'</span>';
+    html+='<button onclick="event.stopPropagation();toggleTokenInput()" style="font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text3);cursor:pointer;">\u66F4\u6362</button>';
+    html+='<button onclick="event.stopPropagation();disableSync()" style="font-size:11px;padding:2px 8px;border:1px solid var(--danger);border-radius:10px;background:var(--card);color:var(--danger);cursor:pointer;">\u5173\u95ED\u540C\u6B65</button>';
+    html+='</div>';
+    html+='<div id="sync-token-edit" style="display:none;margin-top:6px;"><input id="sync-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"><button onclick="event.stopPropagation();saveSyncToken()" style="margin-left:4px;padding:6px 12px;background:var(--pri);color:#fff;border:none;border-radius:var(--r2);cursor:pointer;font-size:12px;font-weight:600;">\u4FDD\u5B58</button></div>';
+  } else {
+    html+='<div style="display:flex;gap:6px;"><input id="sync-token-input-first" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"><button onclick="event.stopPropagation();saveSyncTokenFirst()" style="padding:6px 14px;background:var(--pri);color:#fff;border:none;border-radius:var(--r2);cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">\u5F00\u542F\u540C\u6B65</button></div>';
+  }
+  html+='</div></div>';
+  return html;
+}
+
+function updateSyncUI(){
+  var st=document.getElementById('sync-status'); if(!st) return;
+  // 绠€鍗曟洿鏂帮細閲嶆柊娓叉煋鏁翠釜鏁版嵁绠＄悊鍗＄墖 鈥斺€?澶噸閲忕骇锛屽彧鏇存柊 status dot
+  // 鐢?renderAll 浼氶噸鏂版覆鏌撳叏閮紝杩欓噷閫夋嫨杞婚噺鏇存柊
+  var s=SYNC_STATE;
+  var dot=st.querySelector('.dot');
+  if(!dot){ renderAll(); return; }
+  dot.className='dot';
+  if(!s.token) dot.className='dot off';
+  else if(s.status==='ok') dot.className='dot ok';
+  else if(s.status==='syncing') dot.className='dot syncing';
+  else if(s.status==='err') dot.className='dot err';
+  else dot.className='dot off';
+}
+
+function toggleTokenInput(){
+  var el=document.getElementById('sync-token-edit');
+  if(!el) return;
+  el.style.display=el.style.display==='none'?'block':'none';
+  if(el.style.display==='block'){
+    var inp=document.getElementById('sync-token-input');
+    if(inp){ inp.value=''; inp.focus(); }
+  }
+}
+
+function saveSyncToken(){
+  var inp=document.getElementById('sync-token-input');
+  if(!inp||!inp.value.trim()) return;
+  setupSync(inp.value.trim());
+}
+
+function saveSyncTokenFirst(){
+  var inp=document.getElementById('sync-token-input-first');
+  if(!inp||!inp.value.trim()) return;
+  setupSync(inp.value.trim());
+}
+
+function setupSync(token){
+  var hint=token.substring(0,6)+'...'+token.slice(-4);
+  SYNC_STATE.token=token;
+  SYNC_STATE.tokenHint=hint;
+  SYNC_STATE.status='syncing';
+  SYNC_STATE.msg='';
+  saveSyncState();
+  renderAll();
+  // 灏濊瘯鑾峰彇鎴栧垱寤?Gist
+  cloudPush(false).then(function(success){
+    if(success){
+      SYNC_STATE.status='ok'; SYNC_STATE.msg=T()+' \u5DF2\u540C\u6B65';
+      saveSyncState();
+    } else {
+      SYNC_STATE.status='err'; SYNC_STATE.msg='\u8BF7\u68C0\u67E5 Token \u662F\u5426\u6709 gist \u6743\u9650';
+      saveSyncState();
+    }
+    updateSyncUI();
+  });
+}
+
+function disableSync(){
+  SYNC_STATE.token=''; SYNC_STATE.tokenHint=''; SYNC_STATE.gistId=''; SYNC_STATE.status='off'; SYNC_STATE.msg='';
+  saveSyncState(); renderAll();
+  showToast('\u2601\uFE0F \u4E91\u540C\u6B65\u5DF2\u5173\u95ED');
+}
+
+function ghApi(url, method, body){
+  if(!SYNC_STATE.token) return Promise.reject('no token');
+  var opts={method:method||'GET',headers:{'Authorization':'token '+SYNC_STATE.token,'Accept':'application/vnd.github.v3+json'}};
+  if(body){ opts.headers['Content-Type']='application/json'; opts.body=JSON.stringify(body); }
+  return fetch(url,opts).then(function(r){
+    if(!r.ok) return r.json().then(function(e){ throw new Error(e.message||'HTTP '+r.status); });
+    return r.json().then(function(d){return d;});
+  });
+}
+
+function cloudPush(silent){
+  if(!syncEnabled()) return Promise.resolve(false);
+  SYNC_STATE.status='syncing'; if(!silent) updateSyncUI();
+  var now=Date.now();
+  setLastModified(now);
+  var data={description:'\u8003\u516C\u5DE5\u4F5C\u53F0\u6570\u636E ('+T()+')',public:false,files:{'gwy_data.json':{content:JSON.stringify(state)}}};
+  return ghApi('https://api.github.com/gists/'+SYNC_STATE.gistId,'PATCH',data).then(function(d){
+    SYNC_STATE.status='ok'; SYNC_STATE.msg=T()+' \u5DF2\u540C\u6B65'; saveSyncState(); if(!silent) updateSyncUI(); return true;
+  }).catch(function(e){
+    if(e.message&&e.message.indexOf('Not Found')>=0){
+      // Gist 鍙兘琚垹浜嗭紝閲嶆柊鍒涘缓
+      return createNewGist().then(function(d){
+        SYNC_STATE.gistId=d.id;
+        return ghApi('https://api.github.com/gists/'+SYNC_STATE.gistId,'PATCH',data);
+      }).then(function(){
+        SYNC_STATE.status='ok'; SYNC_STATE.msg=T()+' \u5DF2\u540C\u6B65'; saveSyncState(); if(!silent) updateSyncUI(); return true;
+      }).catch(function(e2){
+        SYNC_STATE.status='err'; SYNC_STATE.msg=e2.message; saveSyncState(); if(!silent) updateSyncUI(); return false;
+      });
+    }
+    SYNC_STATE.status='err'; SYNC_STATE.msg=e.message; saveSyncState(); if(!silent) updateSyncUI(); return false;
+  });
+}
+
+function cloudPull(){
+  if(!syncEnabled()) return Promise.resolve(false);
+  SYNC_STATE.status='syncing'; updateSyncUI();
+  return ghApi('https://api.github.com/gists/'+SYNC_STATE.gistId,'GET').then(function(d){
+    var file=d.files['gwy_data.json'];
+    if(!file||!file.content) throw new Error('\u6570\u636E\u4E3A\u7A7A');
+    var remoteData=JSON.parse(file.content);
+    var remoteTime=new Date(d.updated_at).getTime();
+    var localTime=getLastModified();
+    // 鍙栨椂闂存埑鏈€鏂扮殑
+    if(remoteTime<=localTime){
+      SYNC_STATE.status='ok'; SYNC_STATE.msg='\u5DF2\u662F\u6700\u65B0'; saveSyncState(); updateSyncUI();
+      // 濡傛灉鏈湴鏇存柊鍒欐帹閫?
+      if(localTime>remoteTime) cloudPush(true);
+      return true;
+    }
+    // 杩滅鏇存柊锛屾媺鍙栧苟鍚堝苟
+    state=Object.assign(defaultState(),remoteData);
+    state.todos=state.todos||{};state.review=state.review||{};
+    state.exercise=state.exercise||{};state.diet=state.diet||{};
+    state.interview=state.interview||{notes:''};
+    state.activeTimer=null;state.weeklyReviewNote=state.weeklyReviewNote||'';
+    state.dietViewDate=state.dietViewDate||'';
+    setLastModified(remoteTime);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    SYNC_STATE.status='ok'; SYNC_STATE.msg=T()+' \u5DF2\u540C\u6B65'; saveSyncState();
+    renderAll();
+    showToast('\uD83D\uDD04 \u6570\u636E\u5DF2\u4ECE\u4E91\u7AEF\u540C\u6B65');
+    return true;
+  }).catch(function(e){
+    if(e.message&&e.message.indexOf('Not Found')>=0){
+      // Gist 涓嶅瓨鍦紝鐢ㄦ湰鍦版暟鎹垱寤?
+      return cloudPush(true);
+    }
+    SYNC_STATE.status='err'; SYNC_STATE.msg=e.message; saveSyncState(); updateSyncUI(); return false;
+  });
+}
+
+function autoPull(){
+  if(!syncEnabled()) return;
+  cloudPull().catch(function(){});
+}
+
+function createNewGist(){
+  var data={description:'\u8003\u516C\u5DE5\u4F5C\u53F0\u6570\u636E',public:false,files:{'gwy_data.json':{content:JSON.stringify(state)}}};
+  return ghApi('https://api.github.com/gists','POST',data).then(function(d){
+    SYNC_STATE.gistId=d.id; saveSyncState(); return d;
+  });
+}
+
+// ===== 鍚姩鏃跺鏋滃凡鏈?token 浣嗘病鏈?gistId 鍒欏垱寤?=====
+(function checkSyncInit(){
+  if(SYNC_STATE.token && !SYNC_STATE.gistId){
+    createNewGist().then(function(d){
+      SYNC_STATE.gistId=d.id; SYNC_STATE.status='ok'; SYNC_STATE.msg='\u521D\u59CB\u5316\u6210\u529F'; saveSyncState();
+    }).catch(function(e){
+      SYNC_STATE.status='err'; SYNC_STATE.msg=e.message; saveSyncState();
+    });
+  }
+})();
 </script>
 </body>
 </html>
