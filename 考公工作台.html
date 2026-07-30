@@ -12,7 +12,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>考公工作台 · 小布伴学 v3.0</title>
+<title>考公工作台 · 小布伴学 v3.1</title>
 <script src="hot_topics.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1064,26 +1064,22 @@ function setupSync(token){
   SYNC_STATE.msg='';
   saveSyncState();
   renderAll();
-  // 尝试获取或创建 Gist
-  cloudPush(false).then(function(success){
+  // 先创建 Gist，再推送数据
+  createNewGist().then(function(d){
+    SYNC_STATE.gistId=d.id;
+    saveSyncState();
+    return cloudPush(false);
+  }).then(function(success){
     if(success){
       SYNC_STATE.status='ok'; SYNC_STATE.msg=T()+' \u5DF2\u540C\u6B65';
       saveSyncState();
-    } else {
-      // 失败：清除 token 让用户重新输入
-      SYNC_STATE.token=''; SYNC_STATE.tokenHint=''; SYNC_STATE.gistId='';
-      SYNC_STATE.status='off'; SYNC_STATE.msg='';
-      saveSyncState();
-      showToast('\u274C \u540C\u6B65\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5 Token \u662F\u5426\u6709 gist \u6743\u9650');
-      renderAll();
-      return;
+      updateSyncUI();
     }
-    updateSyncUI();
   }).catch(function(e){
     SYNC_STATE.token=''; SYNC_STATE.tokenHint=''; SYNC_STATE.gistId='';
     SYNC_STATE.status='off'; SYNC_STATE.msg='';
     saveSyncState();
-    showToast('\u274C \u540C\u6B65\u5931\u8D25\uFF1A'+e.message);
+    showToast('\u274C '+ (e.message || '\u540C\u6B65\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u7F51\u7EDC'));
     renderAll();
   });
 }
@@ -1105,7 +1101,16 @@ function ghApi(url, method, body){
 }
 
 function cloudPush(silent){
-  if(!syncEnabled()) return Promise.resolve(false);
+  if(!SYNC_STATE.token) return Promise.resolve(false);
+  // 如果没有 gistId，先创建一个
+  if(!SYNC_STATE.gistId){
+    return createNewGist().then(function(d){
+      SYNC_STATE.gistId=d.id; saveSyncState();
+      return cloudPush(silent);
+    }).catch(function(e){
+      SYNC_STATE.status='err'; SYNC_STATE.msg=e.message; saveSyncState(); if(!silent) updateSyncUI(); return false;
+    });
+  }
   SYNC_STATE.status='syncing'; if(!silent) updateSyncUI();
   var now=Date.now();
   setLastModified(now);
@@ -1129,7 +1134,15 @@ function cloudPush(silent){
 }
 
 function cloudPull(){
-  if(!syncEnabled()) return Promise.resolve(false);
+  if(!SYNC_STATE.token) return Promise.resolve(false);
+  if(!SYNC_STATE.gistId){
+    // 没有 gistId，尝试用本地数据创建
+    return createNewGist().then(function(d){
+      SYNC_STATE.gistId=d.id; SYNC_STATE.status='ok'; saveSyncState(); updateSyncUI(); return true;
+    }).catch(function(e){
+      SYNC_STATE.status='err'; SYNC_STATE.msg=e.message; saveSyncState(); updateSyncUI(); return false;
+    });
+  }
   SYNC_STATE.status='syncing'; updateSyncUI();
   return ghApi('https://api.github.com/gists/'+SYNC_STATE.gistId,'GET').then(function(d){
     var file=d.files['gwy_data.json'];
@@ -1178,7 +1191,7 @@ function createNewGist(){
   });
 }
 
-// ===== 启动时自动拉取（仅当已有有效 token + gistId）=====
+// ===== 启动时自动拉取/修复（仅当已有有效 token）=====
 (function checkSyncInit(){
   if(SYNC_STATE.token && SYNC_STATE.gistId){
     // 已有完整配置，静默拉取
@@ -1186,9 +1199,13 @@ function createNewGist(){
       console.warn('Auto pull failed:',e.message);
     });
   } else if(SYNC_STATE.token && !SYNC_STATE.gistId){
-    // 有 token 但没 gistId — 可能是之前失败残留，清除
-    SYNC_STATE.token=''; SYNC_STATE.tokenHint=''; SYNC_STATE.status='off'; SYNC_STATE.msg='';
-    saveSyncState();
+    // 有 token 但没 gistId — 自动创建 gist
+    createNewGist().then(function(d){
+      SYNC_STATE.gistId=d.id; SYNC_STATE.status='ok'; SYNC_STATE.msg='';
+      saveSyncState();
+    }).catch(function(e){
+      console.warn('Auto create gist failed:',e.message);
+    });
   }
 })();
 </script>
