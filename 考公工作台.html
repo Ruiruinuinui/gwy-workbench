@@ -13,7 +13,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>考公工作台 · 小布伴学 v3.5</title>
-<script src="hot_topics.js"></script>
+<script>document.write('<script src="hot_topics.js?v='+new Date().toISOString().slice(0,10)+'"><\/script>');</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -783,7 +783,13 @@ function renderInterviewSection(){
   return html;
 }
 function refreshHotTopics(){
-  location.reload();
+  var old=document.querySelector('script[src*="hot_topics.js"]');
+  if(old) old.remove();
+  var s=document.createElement('script');
+  s.src='hot_topics.js?t='+Date.now();
+  s.onload=function(){ loadHotTopics(); renderAll(); };
+  s.onerror=function(){ loadHotTopics(); renderAll(); };
+  document.head.appendChild(s);
 }
 function toggleHotCard(i){
   var card=document.getElementById('hot-'+i); if(!card) return;
