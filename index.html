@@ -2,8 +2,17 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>考公工作台 · 小布伴学</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="考公工作台">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#3b82f6">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="manifest" href="manifest.json">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>考公工作台 · 小布伴学 v3.5</title>
 <script src="hot_topics.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -13,7 +22,7 @@
   --ok:#10b981;--ok2:#ecfdf5;--warn:#f59e0b;--danger:#ef4444;
   --shadow:0 1px 3px rgba(0,0,0,.06);--radius:10px;--r2:6px;
 }
-body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-text-size-adjust:100%;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 #app{max-width:900px;margin:0 auto;padding:16px 20px 60px}
 .card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
 .card-hdr{font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
@@ -168,7 +177,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
 .mod-todo-header .back:hover{text-decoration:underline}
 
 @media (max-width:640px){
-  #app{padding:8px 10px 70px}
+  #app{padding:8px 10px 70px;padding-bottom:calc(70px + env(safe-area-inset-bottom,0px))}
   .stats-row{flex-direction:row;gap:6px}
   .stat-card{padding:10px 6px}
   .stat-card .val{font-size:22px}
@@ -176,25 +185,66 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
   .plan-grid,.job-grid{grid-template-columns:1fr}
   .pie-wrap{flex-direction:column;align-items:flex-start}
   .card{padding:12px;margin-bottom:10px}
-  .card-hdr{font-size:14px}
+  .card-hdr{font-size:14px;min-height:40px}
   .cdown-card{padding:14px}
   .cdown-card .days{font-size:36px}
   .record-adder{flex-direction:column;gap:4px}
-  .record-adder input,.record-adder select{width:100%}
-  .todo-row{padding:6px 8px;font-size:12px}
-  .todo-add-row input{min-width:80px}
-  .mod-row{padding:8px 10px;font-size:12px}
-  #timer-bar{height:50px;padding:0 12px;gap:8px}
+  .record-adder input,.record-adder select{width:100%;height:40px;font-size:14px}
+  .todo-row{padding:8px 10px;font-size:13px;min-height:40px}
+  .todo-add-row{flex-wrap:wrap}
+  .todo-add-row input{min-width:80px;height:40px;font-size:14px}
+  .todo-add-row select{height:40px;font-size:14px}
+  .todo-add-row button{height:40px;min-width:44px;font-size:14px}
+  .mod-row{padding:10px 12px;font-size:13px;min-height:40px}
+  #timer-bar{height:50px;padding:0 12px env(safe-area-inset-bottom,0px);gap:8px}
   #timer-bar .t-display{font-size:18px}
   #timer-bar .t-name{font-size:12px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #timer-bar .t-pause,#timer-bar .t-complete{padding:6px 10px;font-size:11px}
+  #timer-bar .t-pause,#timer-bar .t-complete{padding:6px 10px;font-size:11px;min-height:36px}
   .hot-card .hot-title{font-size:13px}
+  .hot-card .hot-expand{min-height:36px;display:flex;align-items:center}
   .cdown-edit .edit-row{flex-direction:column;align-items:flex-start;gap:4px}
   .cdown-edit .edit-row label{min-width:auto}
+  .cdown-edit .edit-row input{width:100%;height:40px;font-size:14px}
+  .cdown-edit .btn-save,.cdown-edit .btn-cancel{height:40px;min-width:60px;font-size:14px}
   .wk-table{font-size:11px}
   .wk-table th,.wk-table td{padding:6px 8px}
   .sync-bottom{font-size:11px}
+  /* Mobile job filter form - stack vertically */
+  .job-form{flex-direction:column}
+  .job-form select,.job-form input{width:100%;height:40px;font-size:14px}
+  .job-form button{height:40px;font-size:14px;width:100%}
+  /* Mobile interview header wrap */
+  .interview-grid + div + div > div{flex-wrap:wrap}
+  /* Mobile sync panel buttons */
+  .sync-setup .hint a{display:inline-block;padding:4px 0}
+  .sync-setup button{min-height:36px;font-size:13px}
+  .sync-setup input{height:40px;font-size:14px}
+  /* Mobile buttons bigger touch targets */
+  .btn{min-height:40px;padding:8px 20px;font-size:14px}
+  .todo-btn{width:32px;height:32px;font-size:13px}
+  .todo-del{font-size:16px;padding:4px 8px}
+  /* Mobile review section */
+  .review-star{font-size:28px;padding:2px}
+  .review-field textarea{font-size:14px;min-height:70px}
+  /* Mobile diet navigation */
+  .record-item{min-height:36px;font-size:13px}
+  /* Mobile 导出/导入 buttons */
+  .card .btn-pri,.card .btn{margin:4px}
+  /* Prevent iOS zoom on input focus - 16px minimum */
+  input[type="text"],input[type="date"],input[type="number"],select,textarea{font-size:16px!important}
 }
+/* Cloud Sync */
+.sync-panel{border-top:1px dashed var(--border);margin-top:10px;padding-top:10px}
+.sync-status{display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:8px;flex-wrap:wrap}
+.sync-status .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sync-status .dot.off{background:var(--text3)}.sync-status .dot.ok{background:var(--ok);animation:syncPulse 3s infinite}.sync-status .dot.err{background:var(--danger)}.sync-status .dot.syncing{background:var(--warn);animation:spin 0.8s linear infinite}
+@keyframes syncPulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sync-setup{font-size:12px}
+.sync-setup input{padding:6px 10px;border:1px solid var(--border);border-radius:var(--r2);font-size:12px;outline:none;width:100%;margin:6px 0;box-sizing:border-box;background:var(--card)}
+.sync-setup input:focus{border-color:var(--pri)}
+.sync-setup .hint{font-size:11px;color:var(--text3);margin:4px 0}
+.sync-setup .hint a{color:var(--pri)}
 </style>
 </head>
 <body>
@@ -258,7 +308,23 @@ function loadState(){
     state.dietViewDate=state.dietViewDate||'';
   }catch(e){ state = defaultState(); }
 }
-function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  // 如果开启了云同步，自动推送
+  if(syncEnabled()) autoPush();
+}
+function getLastModified(){
+  var raw=localStorage.getItem(STORAGE_KEY+'_ts');
+  return raw?parseInt(raw):0;
+}
+function setLastModified(ts){
+  try{ localStorage.setItem(STORAGE_KEY+'_ts',String(ts)); }catch(e){}
+}
+var _syncTimer=null;
+function autoPush(){
+  if(_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(function(){ _syncTimer=null; cloudPush(true); },800);
+}
 
 // ===== HELPERS =====
 function T(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -380,10 +446,13 @@ function renderApp(){
   html+=renderDietSection(dietDate,isDietToday);
   html+='</div></div>';
 
-  // 底部：数据管理
-  html+='<div class="card" style="text-align:center;padding:12px;"><div style="font-size:12px;color:var(--text3);margin-bottom:6px;">\uD83D\uDCE6 \u6362\u8BBE\u5907\u65F6\u53EF\u7528\u5BFC\u51FA/\u5BFC\u5165\u8F6C\u79FB\u6570\u636E</div>';
+  // 底部：数据管理 + 云同步
+  html+='<div class="card" style="text-align:center;padding:12px;">';
+  html+='<div style="font-size:12px;color:var(--text3);margin-bottom:6px;">\uD83D\uDCE6 \u6362\u8BBE\u5907\u65F6\u53EF\u7528\u5BFC\u51FA/\u5BFC\u5165\u8F6C\u79FB\u6570\u636E</div>';
   html+='<button class="btn btn-pri" onclick="exportData()" style="margin:0 4px;">\uD83D\uDCE4 \u5BFC\u51FA\u6570\u636E</button>';
-  html+='<button class="btn" onclick="importData()" style="background:var(--pri2);color:var(--pri);margin:0 4px;">\uD83D\uDCE5 \u5BFC\u5165\u6570\u636E</button></div>';
+  html+='<button class="btn" onclick="importData()" style="background:var(--pri2);color:var(--pri);margin:0 4px;">\uD83D\uDCE5 \u5BFC\u5165\u6570\u636E</button>';
+  html+=renderSyncPanel();
+  html+='</div>';
 
   el.innerHTML=html;
   loadModuleTodoData();
@@ -444,12 +513,12 @@ function renderWeeklyReview(){
   var allMods=MODULES.filter(function(m){return m.id!=='teaching'||state.teachingActive;});
   var weekData=[];
   var weekTotal=0;
-  weekDays.forEach(function(d){
+  weekDays.forEach(function(d,idx){
     var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     var dayMs=0;
     var dayMods={};
     (state.todos[k]||[]).forEach(function(td){ var ms=taskMs(td); dayMs+=ms; if(td.moduleId){ dayMods[td.moduleId]=(dayMods[td.moduleId]||0)+ms; } });
-    weekData.push({date:k,label:dayLabel(6-((6-i))),ms:dayMs,mods:dayMods});
+    weekData.push({date:k,label:dayLabel(6-idx),ms:dayMs,mods:dayMods});
     weekTotal+=dayMs;
   });
 
@@ -841,7 +910,52 @@ function updateStreak(){
 }
 
 // ===== INIT =====
-function init(){ loadState(); state.activeTimer=null; if(timerInterval){clearInterval(timerInterval);timerInterval=null;} fallbackHotTopics(); loadHotTopics(); }
+var syncPollTimer=null;
+function startSyncPoll(){
+  if(syncPollTimer) return;
+  syncPollTimer=setInterval(function(){
+    if(syncEnabled()) autoPull(true);
+  },60000);
+}
+function init(){ loadState(); state.activeTimer=null; if(timerInterval){clearInterval(timerInterval);timerInterval=null;} fallbackHotTopics(); loadHotTopics();
+  // 如果开启了云同步，先验证 gistId 是否匹配共享 Gist（解决多设备各建各的历史问题）
+  if(SYNC_STATE.token && SYNC_STATE.gistId){
+    findExistingGist().then(function(existing){
+      if(existing && existing.id!==SYNC_STATE.gistId){
+        // 发现共享 Gist 但本地 gistId 不对 → 更新并拉取
+        SYNC_STATE.gistId=existing.id; saveSyncState();
+      }
+      return cloudPull();
+    }).catch(function(){
+      return cloudPull();
+    }).then(function(){
+      startSyncPoll();
+    });
+  } else if(SYNC_STATE.token){
+    // 有 token 但没 gistId → 搜索或创建
+    createNewGist().then(function(d){
+      SYNC_STATE.gistId=d.id; SYNC_STATE.status='ok'; SYNC_STATE.msg='';
+      saveSyncState(); renderAll();
+      return cloudPull();
+    }).then(function(){
+      startSyncPoll();
+    }).catch(function(e){
+      SYNC_STATE.token=''; SYNC_STATE.tokenHint=''; SYNC_STATE.gistId=''; SYNC_STATE.status='off'; SYNC_STATE.msg='';
+      saveSyncState(); renderAll();
+      startSyncPoll();
+    });
+  } else {
+    startSyncPoll();
+  }
+  // 检测 PWA 新设备：无数据 + 无同步 → 引导用户设置云同步恢复数据
+  var hasLocalData=state.todos&&Object.keys(state.todos).length>0;
+  var hasReviewData=state.review&&Object.keys(state.review).length>0;
+  if(!SYNC_STATE.token && !hasLocalData && !hasReviewData){
+    setTimeout(function(){
+      showToast('\uD83D\uDCF1 \u68C0\u6D4B\u5230\u65B0\u8BBE\u5907\uFF0C\u8BF7\u6ED1\u52A8\u5230\u5E95\u90E8\u8BBE\u7F6E\u4E91\u540C\u6B65\u6062\u590D\u6570\u636E', 5000);
+    },1500);
+  }
+}
 document.addEventListener('DOMContentLoaded',init);
 
 // ===== 数据导出/导入（换设备手动转移） =====
@@ -889,13 +1003,296 @@ function showToast(msg){
   if(!t){
     t=document.createElement('div');
     t.id='toast';
-    t.style.cssText='position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:9999;background:#1e293b;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.2);transition:opacity .3s;pointer-events:none;white-space:nowrap;';
+    t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9999;background:#1e293b;color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.2);transition:opacity .3s;pointer-events:none;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;';
     document.body.appendChild(t);
   }
   t.textContent=msg;t.style.opacity='1';
   clearTimeout(t._timer);
   t._timer=setTimeout(function(){t.style.opacity='0';},2000);
 }
+
+// ===== 云同步（GitHub Gist） =====
+var GIST_SYNC_KEY = STORAGE_KEY + '_sync';
+var SYNC_STATE = { status:'off', msg:'', gistId:'', token:'', tokenHint:'' };
+
+function loadSyncState(){
+  try{
+    var raw=localStorage.getItem(GIST_SYNC_KEY);
+    if(raw) SYNC_STATE = Object.assign({ status:'off', msg:'', gistId:'', token:'', tokenHint:'' }, JSON.parse(raw));
+  }catch(e){}
+}
+loadSyncState();
+
+function saveSyncState(){
+  try{ localStorage.setItem(GIST_SYNC_KEY, JSON.stringify(SYNC_STATE)); }catch(e){}
+}
+function syncEnabled(){ return SYNC_STATE.token && SYNC_STATE.gistId; }
+
+function renderSyncPanel(){
+  var html='<div class="sync-panel"><div class="sync-status" id="sync-status">';
+  var s=SYNC_STATE;
+  if(!s.token){
+    html+='<span class="dot off"></span><span style="color:var(--text3);">\u2601\uFE0F \u4E91\u540C\u6B65\u672A\u5F00\u542F \u2014 \u591A\u8BBE\u5907\u81EA\u52A8\u540C\u6B65\u6570\u636E</span>';
+  } else if(s.status==='ok'){
+    html+='<span class="dot ok"></span><span style="color:var(--ok);font-weight:600;">\u2601\uFE0F \u5DF2\u540C\u6B65</span>';
+    if(s.msg) html+='<span style="font-size:11px;color:var(--text3);">\u00B7 '+s.msg+'</span>';
+    html+='<span onclick="cloudPull()" style="margin-left:auto;font-size:11px;color:var(--pri);cursor:pointer;font-weight:600;">\uD83D\uDD04 \u540C\u6B65</span>';
+  } else if(s.status==='syncing'){
+    html+='<span class="dot syncing"></span><span style="color:var(--warn);font-weight:600;">\u2601\uFE0F \u540C\u6B65\u4E2D\u2026</span>';
+  } else if(s.status==='err'){
+    html+='<span class="dot err"></span><span style="color:var(--danger);font-weight:600;">\u2601\uFE0F \u540C\u6B65\u5931\u8D25</span>';
+    if(s.msg) html+='<span style="font-size:11px;color:var(--danger);">\u00B7 '+s.msg+'</span>';
+    html+='<span onclick="cloudPull()" style="margin-left:auto;font-size:11px;color:var(--pri);cursor:pointer;font-weight:600;">\uD83D\uDD04 \u91CD\u8BD5</span>';
+  }
+  html+='</div>';
+  html+='<div class="sync-setup" id="sync-setup">';
+  html+='<div class="hint">\uD83D\uDD10 \u8F93\u5165 <a href="https://github.com/settings/tokens" target="_blank">GitHub Token</a> \u5373\u53EF\u5F00\u542F\u591A\u8BBE\u5907\u81EA\u52A8\u540C\u6B65\uFF08\u4EC5\u5B58\u50A8\u5728\u672C\u5730\uFF09</div>';
+  if(s.token){
+    html+='<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">';
+    html+='<span style="font-size:12px;color:var(--text3);word-break:break-all;">Token: '+(s.tokenHint||'***')+'</span>';
+    html+='<button onclick="event.stopPropagation();toggleTokenInput()" style="font-size:12px;padding:6px 14px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text3);cursor:pointer;min-height:36px;">\u66F4\u6362</button>';
+    html+='<button onclick="event.stopPropagation();disableSync()" style="font-size:12px;padding:6px 14px;border:1px solid var(--danger);border-radius:10px;background:var(--card);color:var(--danger);cursor:pointer;min-height:36px;">\u5173\u95ED\u540C\u6B65</button>';
+    html+='</div>';
+    html+='<div id="sync-token-edit" style="display:none;margin-top:8px;"><input id="sync-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="margin-bottom:6px;"><button onclick="event.stopPropagation();saveSyncToken()" style="padding:8px 16px;background:var(--pri);color:#fff;border:none;border-radius:var(--r2);cursor:pointer;font-size:14px;font-weight:600;min-height:40px;">\u4FDD\u5B58\u5E76\u540C\u6B65</button></div>';
+  } else {
+    html+='<div style="display:flex;gap:6px;"><input id="sync-token-input-first" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="flex:1;"><button onclick="event.stopPropagation();saveSyncTokenFirst()" style="padding:8px 16px;background:var(--pri);color:#fff;border:none;border-radius:var(--r2);cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;min-height:40px;">\u5F00\u542F\u540C\u6B65</button></div>';
+  }
+  html+='</div></div>';
+  return html;
+}
+
+function updateSyncUI(){
+  var st=document.getElementById('sync-status'); if(!st) return;
+  // 简单更新：重新渲染整个数据管理卡片 —— 太重量级，只更新 status dot
+  // 用 renderAll 会重新渲染全部，这里选择轻量更新
+  var s=SYNC_STATE;
+  var dot=st.querySelector('.dot');
+  if(!dot){ renderAll(); return; }
+  dot.className='dot';
+  if(!s.token) dot.className='dot off';
+  else if(s.status==='ok') dot.className='dot ok';
+  else if(s.status==='syncing') dot.className='dot syncing';
+  else if(s.status==='err') dot.className='dot err';
+  else dot.className='dot off';
+}
+
+function toggleTokenInput(){
+  var el=document.getElementById('sync-token-edit');
+  if(!el) return;
+  el.style.display=el.style.display==='none'?'block':'none';
+  if(el.style.display==='block'){
+    var inp=document.getElementById('sync-token-input');
+    if(inp){ inp.value=''; inp.focus(); }
+  }
+}
+
+function saveSyncToken(){
+  var inp=document.getElementById('sync-token-input');
+  if(!inp||!inp.value.trim()) return;
+  setupSync(inp.value.trim());
+}
+
+function saveSyncTokenFirst(){
+  var inp=document.getElementById('sync-token-input-first');
+  if(!inp||!inp.value.trim()) return;
+  setupSync(inp.value.trim());
+}
+
+function setupSync(token){
+  var hint=token.substring(0,6)+'...'+token.slice(-4);
+  SYNC_STATE.token=token;
+  SYNC_STATE.tokenHint=hint;
+  SYNC_STATE.status='syncing';
+  SYNC_STATE.msg='';
+  saveSyncState();
+  renderAll();
+  // 搜索或创建 Gist，然后自动拉取（timestamp 对比决定谁覆盖谁）
+  createNewGist().then(function(d){
+    SYNC_STATE.gistId=d.id;
+    saveSyncState();
+    return cloudPull();
+  }).then(function(success){
+    if(success){
+      SYNC_STATE.status='ok'; SYNC_STATE.msg=T()+' \u5DF2\u540C\u6B65';
+      saveSyncState();
+      updateSyncUI();
+    }
+    startSyncPoll();
+  }).catch(function(e){
+    SYNC_STATE.token=''; SYNC_STATE.tokenHint=''; SYNC_STATE.gistId='';
+    SYNC_STATE.status='off'; SYNC_STATE.msg='';
+    saveSyncState();
+    showToast('\u274C '+ (e.message || '\u540C\u6B65\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u7F51\u7EDC'));
+    renderAll();
+  });
+}
+
+function disableSync(){
+  if(syncPollTimer){clearInterval(syncPollTimer);syncPollTimer=null;}
+  SYNC_STATE.token=''; SYNC_STATE.tokenHint=''; SYNC_STATE.gistId=''; SYNC_STATE.status='off'; SYNC_STATE.msg='';
+  saveSyncState(); renderAll();
+  showToast('\u2601\uFE0F \u4E91\u540C\u6B65\u5DF2\u5173\u95ED');
+}
+
+function ghApi(url, method, body){
+  if(!SYNC_STATE.token) return Promise.reject('no token');
+  var opts={method:method||'GET',headers:{'Authorization':'token '+SYNC_STATE.token,'Accept':'application/vnd.github.v3+json'}};
+  if(body){ opts.headers['Content-Type']='application/json'; opts.body=JSON.stringify(body); }
+  return fetch(url,opts).then(function(r){
+    if(!r.ok) return r.json().then(function(e){ throw new Error(e.message||'HTTP '+r.status); });
+    return r.json().then(function(d){return d;});
+  });
+}
+
+function cloudPush(silent){
+  if(!SYNC_STATE.token) return Promise.resolve(false);
+  // 如果没有 gistId，先创建一个
+  if(!SYNC_STATE.gistId){
+    return createNewGist().then(function(d){
+      SYNC_STATE.gistId=d.id; saveSyncState();
+      return cloudPush(silent);
+    }).catch(function(e){
+      SYNC_STATE.status='err'; SYNC_STATE.msg=e.message; saveSyncState(); if(!silent) updateSyncUI(); return false;
+    });
+  }
+  SYNC_STATE.status='syncing'; if(!silent) updateSyncUI();
+  var now=Date.now();
+  setLastModified(now);
+  var data={description:'\u8003\u516C\u5DE5\u4F5C\u53F0\u6570\u636E ('+T()+')',public:false,files:{'gwy_data.json':{content:JSON.stringify(state)}}};
+  return ghApi('https://api.github.com/gists/'+SYNC_STATE.gistId,'PATCH',data).then(function(d){
+    SYNC_STATE.status='ok'; SYNC_STATE.msg=T()+' \u5DF2\u540C\u6B65'; saveSyncState(); if(!silent) updateSyncUI(); return true;
+  }).catch(function(e){
+    if(e.message&&e.message.indexOf('Not Found')>=0){
+      // Gist 可能被删了，重新创建
+      return createNewGist().then(function(d){
+        SYNC_STATE.gistId=d.id;
+        return ghApi('https://api.github.com/gists/'+SYNC_STATE.gistId,'PATCH',data);
+      }).then(function(){
+        SYNC_STATE.status='ok'; SYNC_STATE.msg=T()+' \u5DF2\u540C\u6B65'; saveSyncState(); if(!silent) updateSyncUI(); return true;
+      }).catch(function(e2){
+        SYNC_STATE.status='err'; SYNC_STATE.msg=e2.message; saveSyncState(); if(!silent) updateSyncUI(); return false;
+      });
+    }
+    SYNC_STATE.status='err'; SYNC_STATE.msg=e.message; saveSyncState(); if(!silent) updateSyncUI(); return false;
+  });
+}
+
+function cloudPull(silent){
+  if(!SYNC_STATE.token) return Promise.resolve(false);
+  if(!SYNC_STATE.gistId){
+    // 没有 gistId，尝试用本地数据创建
+    return createNewGist().then(function(d){
+      SYNC_STATE.gistId=d.id; SYNC_STATE.status='ok'; saveSyncState(); if(!silent) updateSyncUI(); return true;
+    }).catch(function(e){
+      SYNC_STATE.status='err'; SYNC_STATE.msg=e.message; saveSyncState(); if(!silent) updateSyncUI(); return false;
+    });
+  }
+  if(!silent){ SYNC_STATE.status='syncing'; updateSyncUI(); }
+  return ghApi('https://api.github.com/gists/'+SYNC_STATE.gistId,'GET').then(function(d){
+    var file=d.files['gwy_data.json'];
+    if(!file||!file.content) throw new Error('\u6570\u636E\u4E3A\u7A7A');
+    var remoteData=JSON.parse(file.content);
+    var remoteTime=new Date(d.updated_at).getTime();
+    var localTime=getLastModified();
+    // 检测：远端数据为空或极旧 → 可能是不同步的 Gist，触发重新搜索
+    var hasRemoteData=remoteData.todos&&Object.keys(remoteData.todos).length>0;
+    var hasLocalData=state.todos&&Object.keys(state.todos).length>0;
+    if(!hasRemoteData && hasLocalData){
+      // 远端无数据但本地有 → 把本地数据推上去
+      SYNC_STATE.status='ok'; SYNC_STATE.msg='\u5DF2\u662F\u6700\u65B0'; saveSyncState(); if(!silent) updateSyncUI();
+      cloudPush(true);
+      return true;
+    }
+    if(!hasRemoteData && !hasLocalData){
+      SYNC_STATE.status='ok'; SYNC_STATE.msg='\u5DF2\u662F\u6700\u65B0'; saveSyncState(); if(!silent) updateSyncUI();
+      return true;
+    }
+    // 对比时间戳，取较新的
+    if(remoteTime<=localTime && hasLocalData){
+      SYNC_STATE.status='ok'; SYNC_STATE.msg='\u5DF2\u662F\u6700\u65B0'; saveSyncState(); if(!silent) updateSyncUI();
+      if(localTime>remoteTime) cloudPush(true);
+      return true;
+    }
+    // 远端更新，拉取并合并
+    state=Object.assign(defaultState(),remoteData);
+    state.todos=state.todos||{};state.review=state.review||{};
+    state.exercise=state.exercise||{};state.diet=state.diet||{};
+    state.interview=state.interview||{notes:''};
+    state.activeTimer=null;state.weeklyReviewNote=state.weeklyReviewNote||'';
+    state.dietViewDate=state.dietViewDate||'';
+    setLastModified(remoteTime);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    SYNC_STATE.status='ok'; SYNC_STATE.msg=T()+' \u5DF2\u540C\u6B65'; saveSyncState();
+    renderAll();
+    if(!silent) showToast('\uD83D\uDD04 \u6570\u636E\u5DF2\u4ECE\u4E91\u7AEF\u540C\u6B65');
+    return true;
+  }).catch(function(e){
+    if(e.message&&e.message.indexOf('Not Found')>=0){
+      // Gist 不存在，搜索共享 Gist
+      return findExistingGist().then(function(existing){
+        if(existing){ SYNC_STATE.gistId=existing.id; saveSyncState(); return cloudPull(silent); }
+        return cloudPush(true);
+      }).catch(function(){ return cloudPush(true); });
+    }
+    SYNC_STATE.status='err'; SYNC_STATE.msg=e.message; saveSyncState(); if(!silent) updateSyncUI(); return false;
+  });
+}
+
+function autoPull(silent){
+  if(!syncEnabled()) return;
+  cloudPull(silent).catch(function(){});
+}
+
+function findExistingGist(){
+  return ghApi('https://api.github.com/gists?per_page=50','GET').then(function(gists){
+    for(var i=0;i<gists.length;i++){
+      if(gists[i].description && gists[i].description.indexOf('\u8003\u516C\u5DE5\u4F5C\u53F0\u6570\u636E')===0){
+        return gists[i];
+      }
+    }
+    return null;
+  });
+}
+
+function createNewGist(){
+  // 先搜索是否已有同名 Gist（避免多设备各建各的）
+  return findExistingGist().then(function(existing){
+    if(existing){
+      SYNC_STATE.gistId=existing.id; saveSyncState(); return existing;
+    }
+    // 没找到才创建新的
+    var data={description:'\u8003\u516C\u5DE5\u4F5C\u53F0\u6570\u636E',public:false,files:{'gwy_data.json':{content:JSON.stringify(state)}}};
+    return ghApi('https://api.github.com/gists','POST',data).then(function(d){
+      SYNC_STATE.gistId=d.id; saveSyncState(); return d;
+    });
+  }).catch(function(e){
+    // 搜索失败（如网络问题），降级为直接创建
+    var data={description:'\u8003\u516C\u5DE5\u4F5C\u53F0\u6570\u636E',public:false,files:{'gwy_data.json':{content:JSON.stringify(state)}}};
+    return ghApi('https://api.github.com/gists','POST',data).then(function(d){
+      SYNC_STATE.gistId=d.id; saveSyncState(); return d;
+    });
+  });
+}
+
+// ===== 启动时自动拉取/修复（仅当已有有效 token）=====
+(function checkSyncInit(){
+  if(SYNC_STATE.token && SYNC_STATE.gistId){
+    // 已有完整配置，静默拉取
+    cloudPull().catch(function(e){
+      console.warn('Auto pull failed:',e.message);
+    });
+  } else if(SYNC_STATE.token && !SYNC_STATE.gistId){
+    // 有 token 但没 gistId — 自动搜索/创建 gist
+    createNewGist().then(function(d){
+      SYNC_STATE.gistId=d.id; SYNC_STATE.status='ok'; SYNC_STATE.msg='';
+      saveSyncState();
+      // 找到已有 Gist 则拉取数据，新创建的则推送本地数据
+      cloudPull().catch(function(){});
+    }).catch(function(e){
+      console.warn('Auto create gist failed:',e.message);
+    });
+  }
+})();
 </script>
 </body>
 </html>
