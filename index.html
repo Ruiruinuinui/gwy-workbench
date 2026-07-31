@@ -123,8 +123,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
 .hot-card.expanded .hot-full{display:block}
 .hot-card .hot-article{font-size:13px;color:var(--text);line-height:1.85;margin-bottom:12px;text-indent:2em}
 .hot-card .hot-commentary{font-size:13px;color:var(--pri);line-height:1.85;background:var(--pri2);padding:12px;border-radius:var(--r2);border-left:3px solid var(--pri)}
-.hot-card .hot-commentary-tag{font-size:11px;font-weight:700;color:var(--pri);margin-bottom:4px}
-.hot-card .hot-commentary-body{font-size:13px;color:var(--text);line-height:1.85;text-indent:2em}
+.hot-card .hot-commentary-tag{font-size:11px;font-weight:700;color:var(--pri);margin-bottom:6px}
+.hot-card .hot-commentary-body{font-size:13px;color:var(--text);line-height:1.85;text-indent:2em;margin-bottom:6px}
+.hot-card .hot-commentary-body:last-child{margin-bottom:0}
+.hot-card .hot-commentary-label{display:inline-block;font-size:11px;font-weight:700;color:var(--pri);background:var(--card);padding:1px 6px;border-radius:4px;margin-right:4px}
+.hot-card .hot-commentary-keywords{font-size:12px;color:var(--pri);font-weight:600;margin-top:4px;padding-top:6px;border-top:1px dashed var(--border)}
+.hot-card .hot-commentary-quote{font-style:italic;color:var(--text2);background:#fff;padding:8px 10px;border-radius:var(--r2);margin-top:6px;border-left:2px solid var(--warn)}
 
 /* Exercise / Diet */
 .record-item{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;color:var(--text2);border-radius:var(--r2)}
@@ -652,6 +656,30 @@ function fallbackHotTopics(){
   console.log('已加载内嵌热点数据: '+interviewHotTopics.length+' 个话题');
 }
 
+function renderCommentary(cmt){
+  var h='<div class="hot-commentary"><div class="hot-commentary-tag">&#x1F4AC; \u9762\u8bd5\u8bc4\u8bba\u5206\u6790</div>';
+  if(cmt==null||cmt===''){ h+='</div>'; return h; }
+  if(typeof cmt==='string'){
+    h+='<div class="hot-commentary-body">'+cmt+'</div></div>';
+    return h;
+  }
+  if(typeof cmt==='object'){
+    if(cmt.analysis){ h+='<div class="hot-commentary-body"><span class="hot-commentary-label">&#x1F50D; \u5206\u6790</span>'+cmt.analysis+'</div>'; }
+    if(cmt.framework){ h+='<div class="hot-commentary-body"><span class="hot-commentary-label">&#x1F3AF; \u6846\u67b6</span>'+cmt.framework+'</div>'; }
+    if(cmt.keywords){
+      var kw=cmt.keywords;
+      if(Array.isArray(kw)){
+        h+='<div class="hot-commentary-keywords"><span class="hot-commentary-label">&#x1F3F7; \u5173\u952E\u8BCD</span>'+kw.map(function(k){return '\u300C'+k+'\u300D';}).join('\u3001')+'</div>';
+      } else {
+        h+='<div class="hot-commentary-keywords"><span class="hot-commentary-label">&#x1F3F7; \u5173\u952E\u8BCD</span>'+kw+'</div>';
+      }
+    }
+    if(cmt.quote){ h+='<div class="hot-commentary-quote">&#x1F4DC; '+cmt.quote+'</div>'; }
+  }
+  h+='</div>';
+  return h;
+}
+
 function renderInterviewSection(){
   var html='';
   var statusColor=interviewLoadError?'var(--warn)':'var(--ok)';
@@ -673,7 +701,7 @@ function renderInterviewSection(){
     html+='<div class="hot-expand"><span class="chevron">&#x25BE;</span> \u5c55\u5f00\u9605\u8bfb\u5168\u6587</div>';
     html+='<div class="hot-full">';
     html+='<div class="hot-article">'+c.article+'</div>';
-    html+='<div class="hot-commentary"><div class="hot-commentary-tag">&#x1F4AC; \u9762\u8bd5\u8bc4\u8bba\u5206\u6790</div><div class="hot-commentary-body">'+c.commentary+'</div></div>';
+    html+=renderCommentary(c.commentary);
     html+='</div></div>';
   });
   html+='</div>';
