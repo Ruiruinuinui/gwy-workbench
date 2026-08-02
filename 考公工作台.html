@@ -1194,7 +1194,8 @@ function cloudPush(silent){
   SYNC_STATE.status='syncing'; if(!silent) updateSyncUI();
   var now=Date.now();
   setLastModified(now);
-  var data={description:'\u8003\u516C\u5DE5\u4F5C\u53F0\u6570\u636E ('+T()+')',public:false,files:{'gwy_data.json':{content:JSON.stringify(state)}}};
+  var _pushState=JSON.parse(JSON.stringify(state)); _pushState.activeTimer=null;
+  var data={description:'\u8003\u516C\u5DE5\u4F5C\u53F0\u6570\u636E ('+T()+')',public:false,files:{'gwy_data.json':{content:JSON.stringify(_pushState)}}};
   return ghApi('https://api.github.com/gists/'+SYNC_STATE.gistId,'PATCH',data).then(function(d){
     SYNC_STATE.status='ok'; SYNC_STATE.msg=T()+' \u5DF2\u540C\u6B65'; saveSyncState(); if(!silent) updateSyncUI(); return true;
   }).catch(function(e){
@@ -1250,11 +1251,12 @@ function cloudPull(silent){
       return true;
     }
     // 远端更新，拉取并合并
+    var _at=state.activeTimer;
     state=Object.assign(defaultState(),remoteData);
     state.todos=state.todos||{};state.review=state.review||{};
     state.exercise=state.exercise||{};state.diet=state.diet||{};
     state.interview=state.interview||{notes:''};
-    state.activeTimer=null;state.weeklyReviewNote=state.weeklyReviewNote||'';
+    state.activeTimer=_at;state.weeklyReviewNote=state.weeklyReviewNote||'';
     state.dietViewDate=state.dietViewDate||'';
     setLastModified(remoteTime);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
