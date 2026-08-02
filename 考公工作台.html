@@ -308,7 +308,7 @@ function loadState(){
     state.todos=state.todos||{}; state.review=state.review||{};
     state.exercise=state.exercise||{}; state.diet=state.diet||{};
     state.interview=state.interview||{notes:''};
-    state.activeTimer=null; state.weeklyReviewNote=state.weeklyReviewNote||'';
+    state.activeTimer=state.activeTimer||null; state.weeklyReviewNote=state.weeklyReviewNote||'';
     state.dietViewDate=state.dietViewDate||'';
   }catch(e){ state = defaultState(); }
 }
@@ -926,6 +926,12 @@ function updateTimerUI(){
   var taskName='--',sessionMs=0;
   if(at.type==='todo'){ var todos=state.todos[at.date]||[]; var td=todos.find(function(t){return t.id===at.taskId;}); taskName='\u2611 '+(td?td.text:'--'); sessionMs=td?taskMs(td):0; }
   var totalMs=sessionMs+(Date.now()-at.startTime); disp.textContent=fmtHH(Math.floor(totalMs/1000)); name.textContent=taskName;
+  // 记录最后心跳时间，用于页面重载后判断是否需要恢复计时器
+  at.lastTick=Date.now();
+  // 每30秒静默保存到 localStorage（不触发云同步）
+  if(!at._saveCnt) at._saveCnt=0;
+  at._saveCnt++;
+  if(at._saveCnt>=30){ at._saveCnt=0; try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){} }
 }
 
 // ===== STREAK =====
@@ -953,7 +959,25 @@ function startSyncPoll(){
     if(syncEnabled()) autoPull(true);
   },60000);
 }
-function init(){ loadState(); state.activeTimer=null; if(timerInterval){clearInterval(timerInterval);timerInterval=null;} fallbackHotTopics(); loadHotTopics();
+function init(){ loadState();
+  // 恢复计时器：如果上次有正在运行的计时器
+  if(state.activeTimer){
+    var at=state.activeTimer;
+    // 检查页面是否关闭了较长时间（>2分钟），如果是则停止计时器并保存会话
+    if(at.lastTick && Date.now()-at.lastTick>120000){
+      if(at.type==='todo'){
+        var todos=state.todos[at.date]||[]; var td=todos.find(function(t){return t.id===at.taskId;});
+        if(td){ if(at.lastTick-at.startTime>1000){td.sessions.push({start:at.startTime,end:at.lastTick});} if(td.status==='active') td.status='pending'; }
+      }
+      state.activeTimer=null; if(timerInterval){clearInterval(timerInterval);timerInterval=null;} saveState();
+    } else {
+      // 页面只是短暂关闭，恢复计时器
+      timerInterval=setInterval(updateTimerUI,1000);
+    }
+  } else {
+    if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
+  }
+  fallbackHotTopics(); loadHotTopics();
   // 如果开启了云同步，先验证 gistId 是否匹配共享 Gist（解决多设备各建各的历史问题）
   if(SYNC_STATE.token && SYNC_STATE.gistId){
     findExistingGist().then(function(existing){
@@ -993,6 +1017,13 @@ function init(){ loadState(); state.activeTimer=null; if(timerInterval){clearInt
   }
 }
 document.addEventListener('DOMContentLoaded',init);
+// 页面关闭时保存计时器心跳，用于重载后恢复
+window.addEventListener('beforeunload',function(){
+  if(state.activeTimer){
+    state.activeTimer.lastTick=Date.now();
+    try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}
+  }
+});
 
 // ===== 数据导出/导入（换设备手动转移） =====
 function exportData(){
